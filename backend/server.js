@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 const db = require('./db');
 const authRoutes = require('./routes/auth');
+const feirasRoutes = require('./routes/feiras');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -34,7 +35,21 @@ const initDb = async () => {
       // Ignora erro se coluna já existir em outros dialetos
     }
 
-    console.log('Tabela de usuários verificada/criada com os novos campos.');
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS feiras (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(100) NOT NULL,
+        local VARCHAR(255) NOT NULL,
+        data DATE NOT NULL,
+        hora_inicio TIME NOT NULL,
+        hora_fim TIME NOT NULL,
+        descricao TEXT,
+        organizador_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    console.log('Tabelas verificadas/criadas com sucesso.');
   } catch (err) {
     console.error('Erro ao inicializar o banco:', err);
   }
@@ -50,6 +65,7 @@ app.get('/', (req, res) => {
 
 // Rotas da API
 app.use('/api/auth', authRoutes);
+app.use('/api/feiras', feirasRoutes);
 
 // Inicia o servidor
 app.listen(PORT, () => {
