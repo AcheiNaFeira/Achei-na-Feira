@@ -4,6 +4,7 @@ require('dotenv').config();
 const db = require('./db');
 const authRoutes = require('./routes/auth');
 const feirasRoutes = require('./routes/feiras');
+const produtosRoutes = require('./routes/produtos');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -49,6 +50,19 @@ const initDb = async () => {
       );
     `);
 
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS produtos (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(100) NOT NULL,
+        descricao TEXT,
+        preco DECIMAL(10,2) NOT NULL,
+        categoria VARCHAR(50) NOT NULL,
+        emoji VARCHAR(10),
+        feirante_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     console.log('Tabelas verificadas/criadas com sucesso.');
   } catch (err) {
     console.error('Erro ao inicializar o banco:', err);
@@ -66,6 +80,7 @@ app.get('/', (req, res) => {
 // Rotas da API
 app.use('/api/auth', authRoutes);
 app.use('/api/feiras', feirasRoutes);
+app.use('/api/produtos', produtosRoutes);
 
 // Inicia o servidor
 app.listen(PORT, () => {
