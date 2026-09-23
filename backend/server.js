@@ -5,6 +5,7 @@ const db = require('./db');
 const authRoutes = require('./routes/auth');
 const feirasRoutes = require('./routes/feiras');
 const produtosRoutes = require('./routes/produtos');
+const convitesRoutes = require('./routes/convites');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -63,6 +64,17 @@ const initDb = async () => {
       );
     `);
 
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS participacoes (
+        id SERIAL PRIMARY KEY,
+        feira_id INTEGER REFERENCES feiras(id) ON DELETE CASCADE,
+        feirante_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        status VARCHAR(20) NOT NULL DEFAULT 'pendente',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(feira_id, feirante_id)
+      );
+    `);
+
     console.log('Tabelas verificadas/criadas com sucesso.');
   } catch (err) {
     console.error('Erro ao inicializar o banco:', err);
@@ -81,6 +93,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/feiras', feirasRoutes);
 app.use('/api/produtos', produtosRoutes);
+app.use('/api/convites', convitesRoutes);
 
 // Inicia o servidor
 app.listen(PORT, () => {
