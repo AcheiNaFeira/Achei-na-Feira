@@ -5,28 +5,31 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'secret_key_temporaria';
 
 const authController = {
-  async register(req, res) {
-    const { nome, email, senha, tipo } = req.body;
-
-    if (!['consumidor', 'feirante'].includes(tipo)) {
-      return res.status(400).json({ error: 'Tipo de usuário inválido para cadastro.' });
-    }
+  async criarFeirante(req, res) {
+    const { nome, email } = req.body;
+    
+    // Gera uma senha provisória padrão
+    const senhaProvisoria = 'Mudar123';
 
     try {
       const salt = await bcrypt.genSalt(10);
-      const hashSenha = await bcrypt.hash(senha, salt);
+      const hashSenha = await bcrypt.hash(senhaProvisoria, salt);
 
       const result = await db.query(
         'INSERT INTO users (nome, email, senha, tipo, precisa_trocar_senha) VALUES ($1, $2, $3, $4, $5) RETURNING id, nome, email, tipo, precisa_trocar_senha',
-        [nome, email, hashSenha, tipo, false]
+        [nome, email, hashSenha, 'feirante', true]
       );
 
-      res.status(201).json({ message: 'Usuário criado!', user: result.rows[0] });
+      res.status(201).json({ 
+        message: 'Feirante criado!', 
+        user: result.rows[0],
+        senha_provisoria: senhaProvisoria 
+      });
     } catch (err) {
       if (err.code === '23505') {
         return res.status(400).json({ error: 'E-mail já cadastrado.' });
       }
-      console.error('Erro no register:', err);
+      console.error('Erro no criarFeirante:', err);
       res.status(500).json({ error: 'Erro no servidor' });
     }
   },

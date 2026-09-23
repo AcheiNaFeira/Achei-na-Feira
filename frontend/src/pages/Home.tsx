@@ -18,9 +18,9 @@ export function HomePage() {
     <Shell>
       <section className="hero">
         <div className="hero-copy">
-          <span className="kicker">COMIDA LOCAL, VIDA REAL</span>
+          <span className="kicker">COMPRA LOCAL, VIDA REAL</span>
           <h1>Encontre o que é <em>feito perto.</em></h1>
-          <p>Feiras, produtores e sabores da sua cidade em um só lugar.</p>
+          <p>Feiras, produtores, artesãos e muito mais da sua cidade em um só lugar.</p>
           <SearchBar onSearch={() => navigate('/produtos')} />
           <div className="hero-links">
             <button onClick={() => navigate('/feiras')}>Ver feiras perto de mim <ArrowRight size={15} /></button>
@@ -29,7 +29,7 @@ export function HomePage() {
         </div>
         <div className="hero-art">
           <div className="sun"></div>
-          <div className="art-card art-card-one">🥕<small>da terra<br /><b>pra sua mesa</b></small></div>
+          <div className="art-card art-card-one">🛍️<small>da sua região<br /><b>pra suas mãos</b></small></div>
         </div>
       </section>
       

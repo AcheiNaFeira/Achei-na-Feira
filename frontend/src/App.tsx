@@ -34,7 +34,6 @@ export default function App() {
         <Route path="/produtos" element={<Listing productsOnly />} />
         <Route path="/feira/:id" element={<FairDetail />} />
         <Route path="/login" element={<Auth />} />
-        <Route path="/cadastro" element={<Auth signup />} />
         
         <Route path="/nova-senha" element={
           <PrivateRoute>

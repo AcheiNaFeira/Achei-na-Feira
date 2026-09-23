@@ -23,7 +23,6 @@ export function Header() {
           <button onClick={() => { navigate('/produtos'); setOpen(false); }}>Produtos</button>
           <button onClick={() => { navigate('/manual'); setOpen(false); }}>Manual</button>
           <button onClick={() => { navigate('/login'); setOpen(false); }} className="nav-login">Entrar</button>
-          <Button variant="primary" onClick={() => { navigate('/cadastro'); setOpen(false); }}>Criar conta <ArrowRight size={16} /></Button>
         </nav>
         <button className="mobile-menu" aria-label="Abrir menu" onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</button>
       </div>
@@ -87,10 +86,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <main>{children}</main>
       <footer>
         <Logo />
-        <span>Comida boa, perto de você.</span>
+        <span>Os melhores produtos, perto de você.</span>
         <div>
           <button onClick={() => navigate('/feiras')}>Encontrar feiras</button>
-          <button onClick={() => navigate('/cadastro')}>Quero vender</button>
         </div>
       </footer>
     </>

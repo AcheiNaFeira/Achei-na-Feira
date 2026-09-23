@@ -33,7 +33,9 @@ export function NovaSenha() {
         <div>
           <span className="kicker">SEGURANÇA</span>
           <h1>Atualize sua<br /><em>senha.</em></h1>
+          <p>Uma nova senha garante o acesso seguro ao seu painel.</p>
         </div>
+        <span className="auth-caption">Joinville, SC · 2024</span>
       </div>
       <div className="auth-form-wrap">
         <div className="auth-form">

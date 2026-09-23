@@ -67,13 +67,39 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
               {convites.length === 0 ? <p>Nenhum convite no momento.</p> : (
                 convites.map((c: any) => (
                   <div key={c.convite_id} style={{marginBottom: 10, background: '#f5f5f5', padding: 10, borderRadius: 8}}>
-                    <strong>{c.feira_nome}</strong>
+                    <strong style={{color: 'black'}}>{c.feira_nome}</strong>
                     <div style={{display: 'flex', gap: 10, marginTop: 10}}>
                       <Button onClick={() => aceitarConvite(c.convite_id)}>Aceitar</Button>
                     </div>
                   </div>
                 ))
               )}
+            </div>
+          )}
+
+          {organizer && (
+            <div className="panel">
+              <div className="panel-head">
+                <div><span className="kicker">ADMINISTRAÇÃO</span><h2>Cadastrar Feirante</h2></div>
+              </div>
+              <p style={{fontSize: 12, color: '#58706c'}}>Crie uma conta para um novo feirante. Ele receberá uma senha provisória.</p>
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target as HTMLFormElement);
+                try {
+                  const res = await api.post('/auth/feirante', Object.fromEntries(formData));
+                  alert(`Feirante criado com sucesso!\nE-mail: ${res.data.user.email}\nSenha provisória: ${res.data.senha_provisoria}`);
+                  (e.target as HTMLFormElement).reset();
+                } catch (err: any) {
+                  alert(err.response?.data?.error || 'Erro ao criar feirante');
+                }
+              }}>
+                <div style={{display: 'flex', flexDirection: 'column', gap: 10, marginTop: 15}}>
+                  <input name="nome" placeholder="Nome do feirante" required style={{padding: '10px', border: '1px solid #dbe4da', borderRadius: '4px'}} />
+                  <input name="email" type="email" placeholder="E-mail" required style={{padding: '10px', border: '1px solid #dbe4da', borderRadius: '4px'}} />
+                  <Button type="submit">Criar Feirante</Button>
+                </div>
+              </form>
             </div>
           )}
         </div>
