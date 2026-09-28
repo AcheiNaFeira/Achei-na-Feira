@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 const db = require('./db');
 const authRoutes = require('./routes/auth');
@@ -13,13 +14,31 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middlewares
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
+app.use(cookieParser());
 app.use(express.json());
 app.use('/uploads', express.static(require('path').join(__dirname, 'uploads')));
 
-// Criar tabela de usuários (Apenas para garantir que o banco funciona)
+// Contador de Views Diário
+app.post('/api/visita', async (req, res) => {
+  try {
+    await db.query(`
+      INSERT INTO analytics_daily (data, views) 
+      VALUES (CURRENT_DATE, 1) 
+      ON CONFLICT (data) DO UPDATE SET views = analytics_daily.views + 1
+    `);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao registrar visita' });
+  }
+});
+
+// Criar tabelas e setup inicial
 const initDb = async () => {
   try {
+    await db.query('CREATE TABLE IF NOT EXISTS analytics_daily (data DATE PRIMARY KEY, views INTEGER DEFAULT 0)');
+    await db.query('CREATE TABLE IF NOT EXISTS likes_log (id SERIAL PRIMARY KEY, tipo VARCHAR(20), item_id INTEGER, ip VARCHAR(45), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)');
+
     await db.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -61,6 +80,8 @@ const initDb = async () => {
     
     try {
       await db.query(`ALTER TABLE feiras ADD COLUMN IF NOT EXISTS imagem_url TEXT;`);
+      await db.query(`ALTER TABLE feiras ADD COLUMN IF NOT EXISTS endereco_completo TEXT;`);
+      await db.query(`ALTER TABLE feiras ADD COLUMN IF NOT EXISTS likes INTEGER DEFAULT 0;`);
     } catch (e) {}
 
     await db.query(`
@@ -80,6 +101,7 @@ const initDb = async () => {
     // Para atualizar as tabelas antigas que não tinham a imagem
     try {
       await db.query(`ALTER TABLE produtos ADD COLUMN IF NOT EXISTS imagem_url TEXT;`);
+      await db.query(`ALTER TABLE produtos ADD COLUMN IF NOT EXISTS likes INTEGER DEFAULT 0;`);
     } catch (e) {}
 
     await db.query(`

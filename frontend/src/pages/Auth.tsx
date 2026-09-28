@@ -10,6 +10,7 @@ export function Auth() {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
   const [tipo, setTipo] = useState('feirante');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -22,8 +23,7 @@ export function Auth() {
     try {
       if (isLogin) {
         const res = await api.post('/auth/login', { email, senha });
-        const { token, user } = res.data;
-        localStorage.setItem('token', token);
+        const { user } = res.data;
         localStorage.setItem('user', JSON.stringify(user));
         
         if (user.precisa_trocar_senha) {
@@ -32,7 +32,7 @@ export function Auth() {
           navigate(`/${user.tipo}`);
         }
       } else {
-        await api.post('/auth/register', { nome, email, senha, tipo });
+        await api.post('/auth/register', { nome, email, senha, tipo, whatsapp });
         setSuccess('Cadastro realizado! Faça login para continuar.');
         setIsLogin(true);
         setSenha('');
@@ -64,9 +64,14 @@ export function Auth() {
           
           <form onSubmit={handleSubmit}>
             {!isLogin && (
-              <label>Seu nome
-                <input type="text" required value={nome} onChange={e => setNome(e.target.value)} />
-              </label>
+              <>
+                <label>Seu nome
+                  <input type="text" required value={nome} onChange={e => setNome(e.target.value)} />
+                </label>
+                <label>WhatsApp
+                  <input type="text" placeholder="(DD) 99999-9999" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} />
+                </label>
+              </>
             )}
             
             <label>Seu e-mail

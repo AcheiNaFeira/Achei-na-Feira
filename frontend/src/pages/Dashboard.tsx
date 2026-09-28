@@ -65,7 +65,7 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
             <span className="kicker">BOM DIA, {user.nome?.toUpperCase()}</span>
             <h1>{organizer ? 'Vamos movimentar a cidade.' : 'Seu catálogo está vivo.'}</h1>
           </div>
-          <button className="icon-button"><Bell size={19} /></button>
+          <button className="icon-button" onClick={() => alert('Nenhuma notificação nova no momento.')}><Bell size={19} /></button>
         </div>
 
         <div className="dashboard-columns">
@@ -88,7 +88,9 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
                   )}
                 </div>
                 <div><b>{item.nome}</b></div>
-                <Pencil size={15} />
+                <button aria-label="Editar" onClick={() => alert('Edição de item será disponibilizada na próxima versão.')} style={{background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b'}}>
+                  <Pencil size={15} />
+                </button>
               </div>
             ))}
           </div>

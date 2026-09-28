@@ -83,9 +83,12 @@ const authController = {
         return res.status(401).json({ error: 'E-mail ou senha incorretos.' });
       }
 
-      
       if (user.tipo === 'organizador' && user.status_aprovacao === 'pendente') {
         return res.status(403).json({ error: 'Sua conta de organizador aguarda aprovação de um administrador.' });
+      }
+
+      if (user.status_aprovacao === 'banido') {
+        return res.status(403).json({ error: 'Sua conta foi desativada pelo administrador.' });
       }
 
       const token = jwt.sign(
@@ -94,9 +97,9 @@ const authController = {
         { expiresIn: '1d' }
       );
 
+      res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 24 * 60 * 60 * 1000 });
       res.json({
         message: 'Login bem-sucedido!',
-        token,
         user: {
           id: user.id,
           nome: user.nome,
@@ -137,9 +140,24 @@ const authController = {
         { expiresIn: '1d' }
       );
 
-      res.json({ message: 'Senha atualizada com sucesso!', token });
+      res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 24 * 60 * 60 * 1000 });
+      res.json({ message: 'Senha atualizada com sucesso!' });
     } catch (err) {
       console.error('Erro no mudar-senha:', err);
+      res.status(500).json({ error: 'Erro no servidor' });
+    }
+  }
+,
+  async logout(req, res) {
+    res.clearCookie('token');
+    res.json({ message: 'Logout bem-sucedido!' });
+  },
+  async me(req, res) {
+    try {
+      const result = await db.query('SELECT id, nome, email, tipo, precisa_trocar_senha, whatsapp FROM users WHERE id = $1', [req.user.id]);
+      if (result.rows.length === 0) return res.status(404).json({ error: 'Usuário não encontrado' });
+      res.json({ user: result.rows[0] });
+    } catch (err) {
       res.status(500).json({ error: 'Erro no servidor' });
     }
   }

@@ -12,7 +12,8 @@ export function NovaFeira() {
     data: '',
     hora_inicio: '',
     hora_fim: '',
-    descricao: ''
+    descricao: '',
+    endereco_completo: ''
   });
   const [imagem, setImagem] = useState<File | null>(null);
 
@@ -56,8 +57,11 @@ export function NovaFeira() {
           <label>Nome da Feira
             <input name="nome" required value={formData.nome} onChange={handleChange} style={{width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4}} />
           </label>
-          <label>Endereço / Local
-            <input name="local" required value={formData.local} onChange={handleChange} style={{width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4}} />
+          <label>Cidade / Local resumido
+            <input name="local" required placeholder="Ex: Praça da Matriz" value={formData.local} onChange={handleChange} style={{width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4}} />
+          </label>
+          <label>Endereço Completo (para GPS)
+            <input name="endereco_completo" required placeholder="Rua, Número, CEP, Cidade" value={formData.endereco_completo || ''} onChange={handleChange} style={{width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4}} />
           </label>
           <label>Data
             <input type="date" name="data" required value={formData.data} onChange={handleChange} style={{width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4}} />

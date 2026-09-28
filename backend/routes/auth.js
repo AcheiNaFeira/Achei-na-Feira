@@ -8,8 +8,10 @@ const roleMiddleware = require('../middlewares/roleMiddleware');
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 
-// Rotas protegidas (todos podem mudar senha)
+// Rotas protegidas (todos podem mudar senha e fazer logout)
 router.put('/mudar-senha', authMiddleware, authController.mudarSenha);
+router.post('/logout', authMiddleware, authController.logout);
+router.get('/me', authMiddleware, authController.me);
 
 // Rotas protegidas (apenas organizadores)
 // Organizador cria um feirante

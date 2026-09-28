@@ -12,26 +12,30 @@ export function NovoProduto() {
     preco: '',
     categoria: 'Frutas & Verduras'
   });
-  const [imagem, setImagem] = useState<File | null>(null);
+  const [imagens, setImagens] = useState<File[]>([]);
 
   const handleChange = (e: any) => {
     setFormData({...formData, [e.target.name]: e.target.value});
   };
 
-  const handleImage = (e: any) => {
-    if (e.target.files && e.target.files[0]) {
-      setImagem(e.target.files[0]);
+  const handleImages = (e: any) => {
+    if (e.target.files) {
+      setImagens(Array.from(e.target.files));
     }
   };
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    if (!imagem) return alert('Por favor, envie uma imagem do produto.');
+    if (imagens.length === 0) return alert('Por favor, envie ao menos uma imagem do produto.');
 
     try {
       const data = new FormData();
       Object.entries(formData).forEach(([key, val]) => data.append(key, val));
-      data.append('imagem', imagem);
+      
+      // Append all images
+      imagens.forEach(img => {
+        data.append('imagens', img);
+      });
 
       await api.post('/produtos', data, { headers: { 'Content-Type': 'multipart/form-data' }});
       alert('Produto cadastrado com sucesso!');
@@ -47,30 +51,35 @@ export function NovoProduto() {
         <button className="back-link" onClick={() => navigate('/feirante')}><ArrowLeft size={16} /> Voltar</button>
         <h1 style={{marginTop: 20}}>Novo Produto</h1>
         <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: 15, marginTop: 20}}>
-          <label>Foto do Produto (Obrigatório)
-            <input type="file" required accept="image/*" onChange={handleImage} style={{width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4, background: '#fff'}} />
+          <label>Fotos do Produto (Pode selecionar várias)
+            <input type="file" multiple accept="image/*" onChange={handleImages} required />
           </label>
-          <label>Nome do Produto
-            <input name="nome" required value={formData.nome} onChange={handleChange} style={{width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4}} />
+          <small style={{color: '#64748b', marginTop: -10}}>Selecione até 5 fotos para criar um carrossel na página do produto.</small>
+
+          <label>Nome do produto
+            <input type="text" name="nome" placeholder="Ex: Tomate Carmem" value={formData.nome} onChange={handleChange} required />
+          </label>
+          <label>Descrição
+            <textarea name="descricao" placeholder="Detalhes do produto, cultivo, etc." value={formData.descricao} onChange={handleChange} />
           </label>
           <div style={{display: 'flex', gap: 15}}>
             <label style={{flex: 1}}>Preço (R$)
-              <input type="number" step="0.01" name="preco" required value={formData.preco} onChange={handleChange} style={{width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4}} />
+              <input type="number" step="0.01" name="preco" placeholder="0.00" value={formData.preco} onChange={handleChange} required />
             </label>
             <label style={{flex: 1}}>Categoria
-              <select name="categoria" value={formData.categoria} onChange={handleChange} style={{width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4}}>
+              <select name="categoria" value={formData.categoria} onChange={handleChange}>
                 <option>Frutas & Verduras</option>
                 <option>Orgânicos</option>
                 <option>Artesanato</option>
                 <option>Flores</option>
-                <option>Alimentos</option>
+                <option>Alimentos Prontos</option>
                 <option>Laticínios</option>
+                <option>Colecionáveis</option>
+                <option>Roupas</option>
               </select>
             </label>
           </div>
-          <label>Descrição Detalhada
-            <textarea name="descricao" rows={4} value={formData.descricao} onChange={handleChange} style={{width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4}} />
-          </label>
+          
           <Button type="submit"><Save size={16} /> Salvar Produto</Button>
         </form>
       </div>

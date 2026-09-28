@@ -7,13 +7,16 @@ export function Logo() {
   return <button className="logo" onClick={() => navigate('/')}><span className="logo-mark"><Leaf size={18} /></span> achei na <b>feira</b></button>;
 }
 
-export function Button({ children, variant = 'primary', onClick, type = 'button' }: { children: React.ReactNode; variant?: 'primary' | 'outline' | 'soft' | 'ghost'; onClick?: () => void; type?: 'button' | 'submit' }) { 
-  return <button type={type} onClick={onClick} className={`button button-${variant}`}>{children}</button>;
+export function Button({ children, variant = 'primary', onClick, type = 'button', style }: { children: React.ReactNode; variant?: 'primary' | 'outline' | 'soft' | 'ghost'; onClick?: (e?: any) => void; type?: 'button' | 'submit'; style?: React.CSSProperties }) { 
+  return <button type={type} onClick={onClick} className={`button button-${variant}`} style={style}>{children}</button>;
 }
 
 export function Header() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const userString = localStorage.getItem('user');
+  const user = userString ? JSON.parse(userString) : null;
+
   return (
     <header className="header">
       <div className="header-inner">
@@ -21,7 +24,13 @@ export function Header() {
         <nav className={open ? 'nav nav-open' : 'nav'}>
           <button onClick={() => { navigate('/feiras'); setOpen(false); }}>Feiras</button>
           <button onClick={() => { navigate('/produtos'); setOpen(false); }}>Produtos</button>
-          <button onClick={() => { navigate('/login'); setOpen(false); }} className="nav-login">Entrar</button>
+          {user ? (
+            <button onClick={() => { navigate(`/${user.tipo}`); setOpen(false); }} className="nav-login" style={{display: 'flex', alignItems: 'center', gap: 6}}>
+              <CircleUserRound size={16} /> {user.nome.split(' ')[0]}
+            </button>
+          ) : (
+            <button onClick={() => { navigate('/login'); setOpen(false); }} className="nav-login">Entrar</button>
+          )}
         </nav>
         <button className="mobile-menu" aria-label="Abrir menu" onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</button>
       </div>
@@ -35,7 +44,7 @@ export function SearchBar({ onSearch, initialValue = '' }: { onSearch?: (value: 
     <div className="searchbar">
       <Search size={19} />
       <input placeholder="O que você procura?" value={value} onChange={e => { setValue(e.target.value); onSearch?.(e.target.value); }} />
-      <button aria-label="Buscar" onClick={() => onSearch?.(value)}><ArrowRight size={18} /></button>
+      <button aria-label="Buscar" onClick={() => onSearch?.(value)}><ArrowRight size={18} color="white" /></button>
     </div>
   );
 }
@@ -69,18 +78,54 @@ export function MarketCard({ market, onClick }: { market: any; onClick: () => vo
 }
 
 export function ProductCard({ product }: { product: any }) { 
+  const navigate = useNavigate();
+  const [likes, setLikes] = useState(product.likes || 0);
+  const [fav, setFav] = useState(() => {
+    const saved = localStorage.getItem('fav_prods') || '[]';
+    return JSON.parse(saved).includes(product.id);
+  });
+
+  const handleLike = async (e: any) => {
+    e.stopPropagation();
+    try {
+      const res = await api.post(`/produtos/${product.id}/like`);
+      setLikes(res.data.likes);
+
+      const saved = JSON.parse(localStorage.getItem('fav_prods') || '[]');
+      if (!saved.includes(product.id)) {
+        saved.push(product.id);
+        localStorage.setItem('fav_prods', JSON.stringify(saved));
+        setFav(true);
+      }
+    } catch (err: any) {
+      if (err.response?.status === 429) {
+        alert(err.response.data.error);
+      } else {
+        alert('Erro ao curtir produto.');
+      }
+    }
+  };
+
   const openWhatsApp = (e: any) => {
     e.stopPropagation();
     const phone = product.feirante_whatsapp?.replace(/\D/g, '');
     if (phone) {
       window.open(`https://wa.me/${phone}?text=Olá, vi seu produto ${encodeURIComponent(product.nome)} no Achei na Feira!`, '_blank');
+    } else {
+      alert('Número não cadastrado.');
     }
   };
 
+  // Pega apenas a primeira imagem para o card se houver várias
+  const primeiraImagem = product.imagem_url ? product.imagem_url.split(',')[0] : null;
+
   return (
-    <article className="product-card">
-      <div className="product-image" style={product.imagem_url ? { backgroundImage: `url(${getImageUrl(product.imagem_url)})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: '#e2e8f0' }}>
-        <button aria-label="Favoritar"><Heart size={17} /></button>
+    <article className="product-card" onClick={() => navigate(`/produto/${product.id}`)} style={{cursor: 'pointer'}}>
+      <div className="product-image" style={primeiraImagem ? { backgroundImage: `url(${getImageUrl(primeiraImagem)})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: '#e2e8f0' }}>
+        <button aria-label="Curtir" onClick={handleLike} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', width: 'auto', borderRadius: 20 }}>
+          <Heart size={14} fill={fav ? "#ef4444" : "none"} color={fav ? "#ef4444" : "currentColor"} />
+          <span style={{ fontSize: 11, fontWeight: 'bold' }}>{likes}</span>
+        </button>
       </div>
       <div className="product-content">
         <span className="tag">{product.categoria}</span>
@@ -116,12 +161,15 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
 export function DashboardNav({ role }: { role: 'feirante' | 'organizador' }) { 
   const navigate = useNavigate();
-  const logout = () => {
-    localStorage.removeItem('token');
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (e) {}
     localStorage.removeItem('user');
     navigate('/login');
   };
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userString = localStorage.getItem('user');
+  const user = userString ? JSON.parse(userString) : {};
 
   return (
     <aside className="dashboard-nav">
@@ -143,3 +191,4 @@ export function DashboardNav({ role }: { role: 'feirante' | 'organizador' }) {
     </aside>
   );
 }
+import api from '../api';

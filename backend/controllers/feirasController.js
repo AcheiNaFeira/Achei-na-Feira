@@ -63,7 +63,7 @@ const feirasController = {
 
   // POST /api/feiras
   async criar(req, res) {
-    const { nome, local, data, hora_inicio, hora_fim, descricao } = req.body;
+    const { nome, local, data, hora_inicio, hora_fim, descricao, endereco_completo } = req.body;
     const organizador_id = req.user.id;
     const imagem_url = req.file ? `/uploads/${req.file.filename}` : null;
 
@@ -73,8 +73,8 @@ const feirasController = {
 
     try {
       const result = await db.query(
-        'INSERT INTO feiras (nome, local, data, hora_inicio, hora_fim, descricao, imagem_url, organizador_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-        [nome, local, data, hora_inicio, hora_fim, descricao, imagem_url, organizador_id]
+        'INSERT INTO feiras (nome, local, data, hora_inicio, hora_fim, descricao, endereco_completo, imagem_url, organizador_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+        [nome, local, data, hora_inicio, hora_fim, descricao, endereco_completo, imagem_url, organizador_id]
       );
       res.status(201).json({ message: 'Feira criada com sucesso!', feira: result.rows[0] });
     } catch (err) {
@@ -86,12 +86,11 @@ const feirasController = {
   // PUT /api/feiras/:id
   async editar(req, res) {
     const { id } = req.params;
-    const { nome, local, data, hora_inicio, hora_fim, descricao } = req.body;
+    const { nome, local, data, hora_inicio, hora_fim, descricao, endereco_completo } = req.body;
     const organizador_id = req.user.id;
     const nova_imagem_url = req.file ? `/uploads/${req.file.filename}` : null;
 
     try {
-      // Verifica se a feira existe e pertence ao organizador logado
       const verifica = await db.query('SELECT * FROM feiras WHERE id = $1 AND organizador_id = $2', [id, organizador_id]);
       if (verifica.rows.length === 0) {
         return res.status(404).json({ error: 'Feira não encontrada ou você não tem permissão para editá-la.' });
@@ -99,11 +98,11 @@ const feirasController = {
 
       let query, params;
       if (nova_imagem_url) {
-        query = 'UPDATE feiras SET nome = $1, local = $2, data = $3, hora_inicio = $4, hora_fim = $5, descricao = $6, imagem_url = $7 WHERE id = $8 RETURNING *';
-        params = [nome, local, data, hora_inicio, hora_fim, descricao, nova_imagem_url, id];
+        query = 'UPDATE feiras SET nome = $1, local = $2, data = $3, hora_inicio = $4, hora_fim = $5, descricao = $6, endereco_completo = $7, imagem_url = $8 WHERE id = $9 RETURNING *';
+        params = [nome, local, data, hora_inicio, hora_fim, descricao, endereco_completo, nova_imagem_url, id];
       } else {
-        query = 'UPDATE feiras SET nome = $1, local = $2, data = $3, hora_inicio = $4, hora_fim = $5, descricao = $6 WHERE id = $7 RETURNING *';
-        params = [nome, local, data, hora_inicio, hora_fim, descricao, id];
+        query = 'UPDATE feiras SET nome = $1, local = $2, data = $3, hora_inicio = $4, hora_fim = $5, descricao = $6, endereco_completo = $7 WHERE id = $8 RETURNING *';
+        params = [nome, local, data, hora_inicio, hora_fim, descricao, endereco_completo, id];
       }
 
       const result = await db.query(query, params);

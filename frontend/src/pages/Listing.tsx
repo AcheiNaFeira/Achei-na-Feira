@@ -86,6 +86,8 @@ export function Listing({ productsOnly = false }: { productsOnly?: boolean }) {
             <option value="Flores">Flores</option>
             <option value="Alimentos">Alimentos</option>
             <option value="Laticínios">Laticínios</option>
+            <option value="Colecionáveis">Colecionáveis</option>
+            <option value="Roupas">Roupas</option>
           </select>
         )}
       </div>

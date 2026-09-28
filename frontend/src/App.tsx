@@ -8,12 +8,13 @@ import { Dashboard } from './pages/Dashboard';
 import { Admin } from './pages/Admin';
 import { NovaFeira } from './pages/NovaFeira';
 import { NovoProduto } from './pages/NovoProduto';
+import { ProductDetail } from './pages/ProductDetail';
 
 function PrivateRoute({ children, role }: { children: React.ReactNode, role?: string }) {
-  const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userString = localStorage.getItem('user');
+  const user = userString ? JSON.parse(userString) : null;
 
-  if (!token) {
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
@@ -28,7 +29,21 @@ function PrivateRoute({ children, role }: { children: React.ReactNode, role?: st
   return <>{children}</>;
 }
 
+import { useEffect } from 'react';
+import api from './api';
+
 export default function App() {
+  useEffect(() => {
+    const userString = localStorage.getItem('user');
+    const hasViewed = document.cookie.includes('site_viewed=true');
+    
+    // Conta visualização apenas se não for perfil registrado E se não visitou hoje (24h)
+    if (!userString && !hasViewed) {
+      api.post('/visita').catch(() => {});
+      document.cookie = "site_viewed=true; max-age=86400; path=/";
+    }
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>
@@ -36,6 +51,7 @@ export default function App() {
         <Route path="/feiras" element={<Listing />} />
         <Route path="/produtos" element={<Listing productsOnly />} />
         <Route path="/feira/:id" element={<FairDetail />} />
+        <Route path="/produto/:id" element={<ProductDetail />} />
         <Route path="/login" element={<Auth />} />
         
         <Route path="/nova-senha" element={

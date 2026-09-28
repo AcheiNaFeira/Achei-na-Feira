@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Leaf, ShoppingBag, Palette, Flower2, Coffee, Milk } from 'lucide-react';
+import { ArrowRight, Leaf, ShoppingBag, Palette, Flower2, Coffee, Milk, Archive, Shirt } from 'lucide-react';
 import { Button, MarketCard, ProductCard, SearchBar, Shell } from '../components/Shared';
 import api from '../api';
 
@@ -10,7 +10,9 @@ const CATEGORIAS = [
   { id: 'Artesanato', icon: <Palette size={24} />, color: '#f59e0b' },
   { id: 'Flores', icon: <Flower2 size={24} />, color: '#ec4899' },
   { id: 'Alimentos', icon: <Coffee size={24} />, color: '#d97706' },
-  { id: 'Laticínios', icon: <Milk size={24} />, color: '#3b82f6' }
+  { id: 'Laticínios', icon: <Milk size={24} />, color: '#3b82f6' },
+  { id: 'Colecionáveis', icon: <Archive size={24} />, color: '#6366f1' },
+  { id: 'Roupas', icon: <Shirt size={24} />, color: '#8b5cf6' }
 ];
 
 export function HomePage() { 
@@ -41,7 +43,15 @@ export function HomePage() {
         </div>
         <div className="hero-art">
           <div className="sun"></div>
-          <div className="art-card art-card-one">🛍️<small>da sua região<br /><b>pra suas mãos</b></small></div>
+          <div className="art-card art-card-one">
+            🛍️<small>da sua região<br /><b>pra suas mãos</b></small>
+          </div>
+          <div className="art-card art-card-two">
+            🎨<small>feito à mão<br /><b>com muito amor</b></small>
+          </div>
+          <div className="art-card" style={{ position: 'absolute', bottom: '12%', left: '15%', transform: 'rotate(5deg)' }}>
+            🌱<small>direto da terra<br /><b>pra sua mesa</b></small>
+          </div>
         </div>
       </section>
 
