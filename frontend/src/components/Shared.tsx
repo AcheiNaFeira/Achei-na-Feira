@@ -64,8 +64,8 @@ export function MarketCard({ market, onClick }: { market: any; onClick: () => vo
 export function ProductCard({ product }: { product: any }) { 
   return (
     <article className="product-card">
-      <div className={`product-image ${product.color || 'tomato'}`}>
-        <span>{product.emoji || '📦'}</span>
+      <div className={`product-image ${product.color || 'tomato'}`} style={product.imagem_url ? { backgroundImage: `url(${product.imagem_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}>
+        {!product.imagem_url && <span>{product.emoji || '📦'}</span>}
         <button aria-label="Favoritar"><Heart size={17} /></button>
       </div>
       <div className="product-content">

@@ -6,6 +6,8 @@ import { Auth } from './pages/Auth';
 import { NovaSenha as NovaSenhaPage } from './pages/NovaSenha';
 import { Dashboard } from './pages/Dashboard';
 import { Admin } from './pages/Admin';
+import { NovaFeira } from './pages/NovaFeira';
+import { NovoProduto } from './pages/NovoProduto';
 
 function PrivateRoute({ children, role }: { children: React.ReactNode, role?: string }) {
   const token = localStorage.getItem('token');
@@ -47,10 +49,20 @@ export default function App() {
             <Dashboard role="feirante" />
           </PrivateRoute>
         } />
+        <Route path="/novo-produto" element={
+          <PrivateRoute role="feirante">
+            <NovoProduto />
+          </PrivateRoute>
+        } />
         
         <Route path="/organizador" element={
           <PrivateRoute role="organizador">
             <Dashboard role="organizador" />
+          </PrivateRoute>
+        } />
+        <Route path="/nova-feira" element={
+          <PrivateRoute role="organizador">
+            <NovaFeira />
           </PrivateRoute>
         } />
         

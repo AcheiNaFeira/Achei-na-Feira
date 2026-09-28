@@ -9,11 +9,15 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
   const organizer = role === 'organizador';
   const [items, setItems] = useState([]);
   const [convites, setConvites] = useState([]);
+  const [feirantes, setFeirantes] = useState([]);
+  const [selectedFeira, setSelectedFeira] = useState('');
+  const [selectedFeirante, setSelectedFeirante] = useState('');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
     if (organizer) {
       api.get('/feiras').then(res => setItems(res.data.filter((f: any) => f.organizador_id === user.id))).catch(console.error);
+      api.get('/users/feirantes').then(res => setFeirantes(res.data)).catch(console.error);
     } else {
       api.get('/produtos').then(res => setItems(res.data.filter((p: any) => p.feirante_id === user.id))).catch(console.error);
       api.get('/convites').then(res => setConvites(res.data)).catch(console.error);
@@ -24,8 +28,31 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
     try {
       await api.put(`/convites/${id}/aceitar`);
       setConvites(convites.filter((c: any) => c.convite_id !== id));
+      alert('Convite aceito!');
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const recusarConvite = async (id: number) => {
+    try {
+      await api.put(`/convites/${id}/recusar`);
+      setConvites(convites.filter((c: any) => c.convite_id !== id));
+      alert('Convite recusado!');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const enviarConvite = async (e: any) => {
+    e.preventDefault();
+    if (!selectedFeira || !selectedFeirante) return alert('Selecione uma feira e um feirante.');
+    try {
+      await api.post(`/feiras/${selectedFeira}/convidar`, { feirante_id: selectedFeirante });
+      alert('Convite enviado com sucesso!');
+      setSelectedFeirante('');
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Erro ao enviar convite');
     }
   };
 
@@ -51,7 +78,9 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
             </div>
             {items.slice(0, 3).map((item: any) => (
               <div className="activity-row" key={item.id}>
-                <div className="mini-art">{item.emoji || '📦'}</div>
+                <div className="mini-art">
+                  {item.imagem_url ? <img src={item.imagem_url} alt="img" style={{width: 24, height: 24, borderRadius: 4, objectFit: 'cover'}} /> : (item.emoji || '📦')}
+                </div>
                 <div><b>{item.nome}</b></div>
                 <Pencil size={15} />
               </div>
@@ -70,6 +99,7 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
                     <strong style={{color: 'black'}}>{c.feira_nome}</strong>
                     <div style={{display: 'flex', gap: 10, marginTop: 10}}>
                       <Button onClick={() => aceitarConvite(c.convite_id)}>Aceitar</Button>
+                      <Button variant="outline" onClick={() => recusarConvite(c.convite_id)}>Recusar</Button>
                     </div>
                   </div>
                 ))
@@ -80,25 +110,19 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
           {organizer && (
             <div className="panel">
               <div className="panel-head">
-                <div><span className="kicker">ADMINISTRAÇÃO</span><h2>Cadastrar Feirante</h2></div>
+                <div><span className="kicker">CONVITES</span><h2>Convidar Feirante</h2></div>
               </div>
-              <p style={{fontSize: 12, color: '#58706c'}}>Crie uma conta para um novo feirante. Ele receberá uma senha provisória.</p>
-              <form onSubmit={async (e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target as HTMLFormElement);
-                try {
-                  const res = await api.post('/auth/feirante', Object.fromEntries(formData));
-                  alert(`Feirante criado com sucesso!\nE-mail: ${res.data.user.email}\nSenha provisória: ${res.data.senha_provisoria}`);
-                  (e.target as HTMLFormElement).reset();
-                } catch (err: any) {
-                  alert(err.response?.data?.error || 'Erro ao criar feirante');
-                }
-              }}>
-                <div style={{display: 'flex', flexDirection: 'column', gap: 10, marginTop: 15}}>
-                  <input name="nome" placeholder="Nome do feirante" required style={{padding: '10px', border: '1px solid #dbe4da', borderRadius: '4px'}} />
-                  <input name="email" type="email" placeholder="E-mail" required style={{padding: '10px', border: '1px solid #dbe4da', borderRadius: '4px'}} />
-                  <Button type="submit">Criar Feirante</Button>
-                </div>
+              <p style={{fontSize: 12, color: '#58706c'}}>Vincule um feirante da plataforma a uma de suas feiras ativas.</p>
+              <form onSubmit={enviarConvite} style={{display: 'flex', flexDirection: 'column', gap: 10, marginTop: 15}}>
+                <select value={selectedFeira} onChange={e => setSelectedFeira(e.target.value)} required style={{padding: '10px', border: '1px solid #dbe4da', borderRadius: '4px'}}>
+                  <option value="">Selecione a feira...</option>
+                  {items.map((f: any) => <option key={f.id} value={f.id}>{f.nome} ({f.data?.split('T')[0]})</option>)}
+                </select>
+                <select value={selectedFeirante} onChange={e => setSelectedFeirante(e.target.value)} required style={{padding: '10px', border: '1px solid #dbe4da', borderRadius: '4px'}}>
+                  <option value="">Selecione o feirante...</option>
+                  {feirantes.map((f: any) => <option key={f.id} value={f.id}>{f.nome} - {f.email}</option>)}
+                </select>
+                <Button type="submit">Enviar Convite</Button>
               </form>
             </div>
           )}

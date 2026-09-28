@@ -47,7 +47,7 @@ const produtosController = {
 
   // POST /api/produtos
   async criar(req, res) {
-    const { nome, descricao, preco, categoria, emoji } = req.body;
+    const { nome, descricao, preco, categoria, emoji, imagem_url } = req.body;
     const feirante_id = req.user.id;
 
     if (!nome || !preco || !categoria) {
@@ -56,8 +56,8 @@ const produtosController = {
 
     try {
       const result = await db.query(
-        'INSERT INTO produtos (nome, descricao, preco, categoria, emoji, feirante_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-        [nome, descricao, preco, categoria, emoji, feirante_id]
+        'INSERT INTO produtos (nome, descricao, preco, categoria, emoji, imagem_url, feirante_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+        [nome, descricao, preco, categoria, emoji, imagem_url, feirante_id]
       );
       res.status(201).json({ message: 'Produto cadastrado com sucesso!', produto: result.rows[0] });
     } catch (err) {
@@ -69,7 +69,7 @@ const produtosController = {
   // PUT /api/produtos/:id
   async editar(req, res) {
     const { id } = req.params;
-    const { nome, descricao, preco, categoria, emoji } = req.body;
+    const { nome, descricao, preco, categoria, emoji, imagem_url } = req.body;
     const feirante_id = req.user.id;
 
     try {
@@ -79,8 +79,8 @@ const produtosController = {
       }
 
       const result = await db.query(
-        'UPDATE produtos SET nome = $1, descricao = $2, preco = $3, categoria = $4, emoji = $5 WHERE id = $6 RETURNING *',
-        [nome, descricao, preco, categoria, emoji, id]
+        'UPDATE produtos SET nome = $1, descricao = $2, preco = $3, categoria = $4, emoji = $5, imagem_url = $6 WHERE id = $7 RETURNING *',
+        [nome, descricao, preco, categoria, emoji, imagem_url, id]
       );
 
       res.json({ message: 'Produto atualizado com sucesso!', produto: result.rows[0] });

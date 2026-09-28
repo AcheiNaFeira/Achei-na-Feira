@@ -8,14 +8,14 @@ export function FairDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [feira, setFeira] = useState<any>(null);
-  const [feirantes, setFeirantes] = useState<any[]>([]);
+  const [produtos, setProdutos] = useState<any[]>([]);
 
   useEffect(() => {
     api.get(`/feiras/${id}`).then(res => setFeira(res.data)).catch(console.error);
-    api.get(`/feiras/${id}/feirantes`).then(res => setFeirantes(res.data)).catch(console.error);
+    api.get(`/feiras/${id}/produtos`).then(res => setProdutos(res.data)).catch(console.error);
   }, [id]);
 
-  if (!feira) return <Shell>Carregando...</Shell>;
+  if (!feira) return <Shell><div style={{padding: 40}}>Carregando...</div></Shell>;
 
   return (
     <Shell>
@@ -37,19 +37,18 @@ export function FairDetail() {
         
         <div className="detail-section">
           <div className="section-heading">
-            <div><span className="kicker">{feirantes.length} FEIRANTES</span><h2>O que você encontra</h2></div>
+            <div><span className="kicker">{produtos.length} PRODUTOS</span><h2>O que você encontra</h2></div>
             <Button variant="soft"><Filter size={16} /> Filtrar</Button>
           </div>
-          <div className="product-grid">
-            {feirantes.map(f => (
-               <article className="product-card" key={f.id}>
-                 <div className="product-content">
-                   <span className="tag">FEIRANTE CONFIRMADO</span>
-                   <h3>{f.nome}</h3>
-                 </div>
-               </article>
-            ))}
-          </div>
+          {produtos.length === 0 ? (
+            <p>Nenhum produto cadastrado pelos feirantes confirmados nesta feira ainda.</p>
+          ) : (
+            <div className="product-grid">
+              {produtos.map(p => (
+                 <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </Shell>

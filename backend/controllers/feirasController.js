@@ -43,6 +43,24 @@ const feirasController = {
     }
   },
 
+  // GET /api/feiras/:id/produtos
+  async listarProdutos(req, res) {
+    const { id } = req.params;
+    try {
+      const result = await db.query(`
+        SELECT p.*, u.nome as feirante_nome 
+        FROM produtos p
+        JOIN participacoes part ON p.feirante_id = part.feirante_id
+        JOIN users u ON p.feirante_id = u.id
+        WHERE part.feira_id = $1 AND part.status = 'aceito'
+      `, [id]);
+      res.json(result.rows);
+    } catch (err) {
+      console.error('Erro ao listar produtos da feira:', err);
+      res.status(500).json({ error: 'Erro no servidor' });
+    }
+  },
+
   // POST /api/feiras
   async criar(req, res) {
     const { nome, local, data, hora_inicio, hora_fim, descricao } = req.body;

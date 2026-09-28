@@ -7,6 +7,7 @@ const feirasRoutes = require('./routes/feiras');
 const produtosRoutes = require('./routes/produtos');
 const convitesRoutes = require('./routes/convites');
 const adminRoutes = require('./routes/admin');
+const usersRoutes = require('./routes/users');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -62,10 +63,16 @@ const initDb = async () => {
         preco DECIMAL(10,2) NOT NULL,
         categoria VARCHAR(50) NOT NULL,
         emoji VARCHAR(10),
+        imagem_url TEXT,
         feirante_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    
+    // Para atualizar as tabelas antigas que não tinham a imagem
+    try {
+      await db.query(`ALTER TABLE produtos ADD COLUMN IF NOT EXISTS imagem_url TEXT;`);
+    } catch (e) {}
 
     await db.query(`
       CREATE TABLE IF NOT EXISTS participacoes (
@@ -98,6 +105,7 @@ app.use('/api/feiras', feirasRoutes);
 app.use('/api/produtos', produtosRoutes);
 app.use('/api/convites', convitesRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/users', usersRoutes);
 
 // Inicia o servidor
 app.listen(PORT, () => {

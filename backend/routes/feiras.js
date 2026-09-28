@@ -9,6 +9,7 @@ const roleMiddleware = require('../middlewares/roleMiddleware');
 router.get('/', feirasController.listar);
 router.get('/:id', feirasController.detalhe);
 router.get('/:id/feirantes', convitesController.listarFeirantes); // Lista feirantes confirmados
+router.get('/:id/produtos', feirasController.listarProdutos); // Lista produtos da feira
 
 // Rotas protegidas (apenas organizadores)
 router.post('/', authMiddleware, roleMiddleware(['organizador']), feirasController.criar);
