@@ -6,6 +6,7 @@ const authRoutes = require('./routes/auth');
 const feirasRoutes = require('./routes/feiras');
 const produtosRoutes = require('./routes/produtos');
 const convitesRoutes = require('./routes/convites');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -25,6 +26,7 @@ const initDb = async () => {
         senha VARCHAR(255) NOT NULL,
         tipo VARCHAR(50) NOT NULL DEFAULT 'consumidor',
         precisa_trocar_senha BOOLEAN DEFAULT false,
+        status_aprovacao VARCHAR(20) DEFAULT 'ativo',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
@@ -33,6 +35,7 @@ const initDb = async () => {
     try {
       await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS tipo VARCHAR(50) NOT NULL DEFAULT 'consumidor';`);
       await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS precisa_trocar_senha BOOLEAN DEFAULT false;`);
+      await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS status_aprovacao VARCHAR(20) DEFAULT 'ativo';`);
     } catch (e) {
       // Ignora erro se coluna já existir em outros dialetos
     }
@@ -94,6 +97,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/feiras', feirasRoutes);
 app.use('/api/produtos', produtosRoutes);
 app.use('/api/convites', convitesRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Inicia o servidor
 app.listen(PORT, () => {

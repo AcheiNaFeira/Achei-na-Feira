@@ -23,12 +23,13 @@ Desenvolvido para mitigar a invisibilidade digital do comércio local. O sistema
 ## Instruções de Execução
 
 1. Clone o repositório em sua máquina local.
-2. Passo a passo para rodar o Backend:
+2. No terminal do projeto coloque o comando `docker-compose up -d`. para rodar o banco de dados
+3. Passo a passo para rodar o Backend:
    * Abra o terminal e acesse a pasta `backend`.
    * Execute o comando `npm install` para baixar as dependências.
    * Configure as variáveis de ambiente utilizando o arquivo `.env.example` como guia.
    * Execute `node server.js` para iniciar a API.
-3. Passo a passo para rodar o Frontend:
+4. Passo a passo para rodar o Frontend:
    * Abra um novo terminal e acesse a pasta `frontend`.
    * Execute o comando `npm install` para baixar as dependências.
    * Inicie o ambiente de desenvolvimento local executando `npm run dev`.

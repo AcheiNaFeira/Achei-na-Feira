@@ -6,26 +6,39 @@ import api from '../api';
 
 export function Auth() { 
   const navigate = useNavigate();
+  const [isLogin, setIsLogin] = useState(true);
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [tipo, setTipo] = useState('feirante');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
+    
     try {
-      const res = await api.post('/auth/login', { email, senha });
-      const { token, user } = res.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      if (user.precisa_trocar_senha) {
-        navigate('/nova-senha');
+      if (isLogin) {
+        const res = await api.post('/auth/login', { email, senha });
+        const { token, user } = res.data;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        if (user.precisa_trocar_senha) {
+          navigate('/nova-senha');
+        } else {
+          navigate(`/${user.tipo}`);
+        }
       } else {
-        navigate(`/${user.tipo}`);
+        await api.post('/auth/register', { nome, email, senha, tipo });
+        setSuccess('Cadastro realizado! Faça login para continuar.');
+        setIsLogin(true);
+        setSenha('');
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro na autenticação');
+      setError(err.response?.data?.error || 'Erro na operação');
     }
   };
 
@@ -44,17 +57,45 @@ export function Auth() {
         <button className="back-link" onClick={() => navigate('/')}><ArrowLeft size={16} /> Voltar</button>
         <div className="auth-form">
           <span className="kicker">QUE BOM TER VOCÊ AQUI</span>
-          <h1>Entre na sua conta.</h1>
-          {error && <p style={{color: 'red'}}>{error}</p>}
+          <h1>{isLogin ? 'Entre na sua conta.' : 'Crie sua conta.'}</h1>
+          
+          {error && <p style={{color: 'red', marginBottom: 10}}>{error}</p>}
+          {success && <p style={{color: 'green', marginBottom: 10}}>{success}</p>}
+          
           <form onSubmit={handleSubmit}>
+            {!isLogin && (
+              <label>Seu nome
+                <input type="text" required value={nome} onChange={e => setNome(e.target.value)} />
+              </label>
+            )}
+            
             <label>Seu e-mail
               <input type="email" required value={email} onChange={e => setEmail(e.target.value)} />
             </label>
             <label>Senha
               <input type="password" required value={senha} onChange={e => setSenha(e.target.value)} />
             </label>
-            <Button type="submit">Entrar <ArrowRight size={16} /></Button>
+            
+            {!isLogin && (
+              <label>Perfil
+                <select value={tipo} onChange={e => setTipo(e.target.value)} style={{padding: '10px', borderRadius: '4px', border: '1px solid #dbe4da', width: '100%'}}>
+                  <option value="feirante">Feirante (Vender produtos)</option>
+                  <option value="organizador">Organizador (Criar feiras)</option>
+                </select>
+              </label>
+            )}
+            
+            <Button type="submit">{isLogin ? 'Entrar' : 'Cadastrar'} <ArrowRight size={16} /></Button>
           </form>
+          
+          <button 
+            type="button" 
+            className="text-link" 
+            style={{marginTop: 20}} 
+            onClick={() => { setIsLogin(!isLogin); setError(''); setSuccess(''); }}
+          >
+            {isLogin ? 'Ainda não tem conta? Cadastre-se' : 'Já tem conta? Faça login'}
+          </button>
         </div>
       </div>
     </main>

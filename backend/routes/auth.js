@@ -5,6 +5,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
 
 // Rota pública (agora apenas login)
+router.post('/register', authController.register);
 router.post('/login', authController.login);
 
 // Rotas protegidas (todos podem mudar senha)
