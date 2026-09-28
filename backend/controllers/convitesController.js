@@ -131,6 +131,30 @@ const convitesController = {
       console.error('Erro ao listar feirantes da feira:', err);
       res.status(500).json({ error: 'Erro no servidor' });
     }
+  },
+
+  // Organizador remove participante
+  async removerParticipante(req, res) {
+    const { feira_id, feirante_id } = req.params;
+    const organizador_id = req.user.id;
+    try {
+      const db = require('../db');
+      const verifica = await db.query('SELECT id FROM feiras WHERE id = $1 AND organizador_id = $2', [feira_id, organizador_id]);
+      if (verifica.rows.length === 0) return res.status(403).json({ error: 'Acesso negado' });
+      await db.query('DELETE FROM participacoes WHERE feira_id = $1 AND feirante_id = $2', [feira_id, feirante_id]);
+      res.json({ message: 'Removido com sucesso' });
+    } catch(e) { res.status(500).json({ error: 'Erro' }); }
+  },
+
+  // Feirante sai da feira
+  async sairDaFeira(req, res) {
+    const { feira_id } = req.params;
+    const feirante_id = req.user.id;
+    try {
+      const db = require('../db');
+      await db.query('DELETE FROM participacoes WHERE feira_id = $1 AND feirante_id = $2', [feira_id, feirante_id]);
+      res.json({ message: 'Você saiu da feira' });
+    } catch(e) { res.status(500).json({ error: 'Erro' }); }
   }
 };
 

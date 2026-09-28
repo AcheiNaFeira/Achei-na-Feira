@@ -7,8 +7,8 @@ export function Logo() {
   return <button className="logo" onClick={() => navigate('/')}><span className="logo-mark"><Leaf size={18} /></span> achei na <b>feira</b></button>;
 }
 
-export function Button({ children, variant = 'primary', onClick, type = 'button', style }: { children: React.ReactNode; variant?: 'primary' | 'outline' | 'soft' | 'ghost'; onClick?: (e?: any) => void; type?: 'button' | 'submit'; style?: React.CSSProperties }) { 
-  return <button type={type} onClick={onClick} className={`button button-${variant}`} style={style}>{children}</button>;
+export function Button({ children, variant = 'primary', onClick, type = 'button', style, title }: { children: React.ReactNode; variant?: 'primary' | 'outline' | 'soft' | 'ghost'; onClick?: (e?: any) => void; type?: 'button' | 'submit'; style?: React.CSSProperties; title?: string }) { 
+  return <button type={type} onClick={onClick} className={`button button-${variant}`} style={style} title={title}>{children}</button>;
 }
 
 export function Header() {

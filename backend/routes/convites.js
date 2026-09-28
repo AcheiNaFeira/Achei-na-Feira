@@ -9,4 +9,10 @@ router.get('/', authMiddleware, roleMiddleware(['feirante']), convitesController
 router.put('/:id/aceitar', authMiddleware, roleMiddleware(['feirante']), convitesController.aceitar);
 router.put('/:id/recusar', authMiddleware, roleMiddleware(['feirante']), convitesController.recusar);
 
+// Feirante sai da feira
+router.delete('/feira/:feira_id/sair', authMiddleware, roleMiddleware(['feirante']), convitesController.sairDaFeira);
+
+// Organizador remove participante
+router.delete('/feira/:feira_id/feirante/:feirante_id', authMiddleware, roleMiddleware(['organizador']), convitesController.removerParticipante);
+
 module.exports = router;

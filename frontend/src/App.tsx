@@ -7,6 +7,7 @@ import { NovaSenha as NovaSenhaPage } from './pages/NovaSenha';
 import { Dashboard } from './pages/Dashboard';
 import { Admin } from './pages/Admin';
 import { NovaFeira } from './pages/NovaFeira';
+import { EditarFeira } from './pages/EditarFeira';
 import { NovoProduto } from './pages/NovoProduto';
 import { ProductDetail } from './pages/ProductDetail';
 
@@ -79,6 +80,11 @@ export default function App() {
         <Route path="/nova-feira" element={
           <PrivateRoute role="organizador">
             <NovaFeira />
+          </PrivateRoute>
+        } />
+        <Route path="/feira/editar/:id" element={
+          <PrivateRoute role="organizador">
+            <EditarFeira />
           </PrivateRoute>
         } />
         
