@@ -14,15 +14,28 @@ export function NovaFeira() {
     hora_fim: '',
     descricao: ''
   });
+  const [imagem, setImagem] = useState<File | null>(null);
 
   const handleChange = (e: any) => {
     setFormData({...formData, [e.target.name]: e.target.value});
   };
 
+  const handleImage = (e: any) => {
+    if (e.target.files && e.target.files[0]) {
+      setImagem(e.target.files[0]);
+    }
+  };
+
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     try {
-      await api.post('/feiras', formData);
+      const data = new FormData();
+      Object.entries(formData).forEach(([key, val]) => data.append(key, val));
+      if (imagem) {
+        data.append('imagem', imagem);
+      }
+
+      await api.post('/feiras', data, { headers: { 'Content-Type': 'multipart/form-data' }});
       alert('Feira criada com sucesso!');
       navigate('/organizador');
     } catch (err) {
@@ -36,6 +49,10 @@ export function NovaFeira() {
         <button className="back-link" onClick={() => navigate('/organizador')}><ArrowLeft size={16} /> Voltar</button>
         <h1 style={{marginTop: 20}}>Nova Feira</h1>
         <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: 15, marginTop: 20}}>
+          <label>Foto de Capa da Feira (Opcional)
+            <input type="file" accept="image/*" onChange={handleImage} style={{width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4, background: '#fff'}} />
+            <small style={{color: '#666', display: 'block', marginTop: 4}}>Se não enviar, usaremos um estilo padrão bonito.</small>
+          </label>
           <label>Nome da Feira
             <input name="nome" required value={formData.nome} onChange={handleChange} style={{width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4}} />
           </label>

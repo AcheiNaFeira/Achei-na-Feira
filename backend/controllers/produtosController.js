@@ -4,7 +4,7 @@ const produtosController = {
   // GET /api/produtos
   async listar(req, res) {
     const { categoria, busca } = req.query;
-    let query = 'SELECT p.*, u.nome as feirante_nome FROM produtos p JOIN users u ON p.feirante_id = u.id WHERE 1=1';
+    let query = 'SELECT p.*, u.nome as feirante_nome, u.whatsapp as feirante_whatsapp FROM produtos p JOIN users u ON p.feirante_id = u.id WHERE 1=1';
     const params = [];
     
     if (categoria) {
@@ -32,7 +32,7 @@ const produtosController = {
     const { id } = req.params;
     try {
       const result = await db.query(
-        'SELECT p.*, u.nome as feirante_nome FROM produtos p JOIN users u ON p.feirante_id = u.id WHERE p.id = $1',
+        'SELECT p.*, u.nome as feirante_nome, u.whatsapp as feirante_whatsapp FROM produtos p JOIN users u ON p.feirante_id = u.id WHERE p.id = $1',
         [id]
       );
       if (result.rows.length === 0) {
@@ -47,17 +47,19 @@ const produtosController = {
 
   // POST /api/produtos
   async criar(req, res) {
-    const { nome, descricao, preco, categoria, emoji, imagem_url } = req.body;
+    const { nome, descricao, preco, categoria } = req.body;
     const feirante_id = req.user.id;
 
-    if (!nome || !preco || !categoria) {
-      return res.status(400).json({ error: 'Nome, preço e categoria são obrigatórios.' });
+    if (!nome || !preco || !categoria || !req.file) {
+      return res.status(400).json({ error: 'Nome, preço, categoria e imagem são obrigatórios.' });
     }
+    
+    const imagem_url = `/uploads/${req.file.filename}`;
 
     try {
       const result = await db.query(
-        'INSERT INTO produtos (nome, descricao, preco, categoria, emoji, imagem_url, feirante_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-        [nome, descricao, preco, categoria, emoji, imagem_url, feirante_id]
+        'INSERT INTO produtos (nome, descricao, preco, categoria, imagem_url, feirante_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+        [nome, descricao, preco, categoria, imagem_url, feirante_id]
       );
       res.status(201).json({ message: 'Produto cadastrado com sucesso!', produto: result.rows[0] });
     } catch (err) {
@@ -69,8 +71,9 @@ const produtosController = {
   // PUT /api/produtos/:id
   async editar(req, res) {
     const { id } = req.params;
-    const { nome, descricao, preco, categoria, emoji, imagem_url } = req.body;
+    const { nome, descricao, preco, categoria } = req.body;
     const feirante_id = req.user.id;
+    const nova_imagem_url = req.file ? `/uploads/${req.file.filename}` : null;
 
     try {
       const verifica = await db.query('SELECT * FROM produtos WHERE id = $1 AND feirante_id = $2', [id, feirante_id]);
@@ -78,10 +81,16 @@ const produtosController = {
         return res.status(404).json({ error: 'Produto não encontrado ou sem permissão.' });
       }
 
-      const result = await db.query(
-        'UPDATE produtos SET nome = $1, descricao = $2, preco = $3, categoria = $4, emoji = $5, imagem_url = $6 WHERE id = $7 RETURNING *',
-        [nome, descricao, preco, categoria, emoji, imagem_url, id]
-      );
+      let query, params;
+      if (nova_imagem_url) {
+        query = 'UPDATE produtos SET nome = $1, descricao = $2, preco = $3, categoria = $4, imagem_url = $5 WHERE id = $6 RETURNING *';
+        params = [nome, descricao, preco, categoria, nova_imagem_url, id];
+      } else {
+        query = 'UPDATE produtos SET nome = $1, descricao = $2, preco = $3, categoria = $4 WHERE id = $5 RETURNING *';
+        params = [nome, descricao, preco, categoria, id];
+      }
+
+      const result = await db.query(query, params);
 
       res.json({ message: 'Produto atualizado com sucesso!', produto: result.rows[0] });
     } catch (err) {

@@ -4,6 +4,7 @@ const feirasController = require('../controllers/feirasController');
 const convitesController = require('../controllers/convitesController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
+const upload = require('../middlewares/upload');
 
 // Rotas públicas
 router.get('/', feirasController.listar);
@@ -12,9 +13,9 @@ router.get('/:id/feirantes', convitesController.listarFeirantes); // Lista feira
 router.get('/:id/produtos', feirasController.listarProdutos); // Lista produtos da feira
 
 // Rotas protegidas (apenas organizadores)
-router.post('/', authMiddleware, roleMiddleware(['organizador']), feirasController.criar);
+router.post('/', authMiddleware, roleMiddleware(['organizador']), upload.single('imagem'), feirasController.criar);
 router.post('/:id/convidar', authMiddleware, roleMiddleware(['organizador']), convitesController.convidar);
-router.put('/:id', authMiddleware, roleMiddleware(['organizador']), feirasController.editar);
+router.put('/:id', authMiddleware, roleMiddleware(['organizador']), upload.single('imagem'), feirasController.editar);
 router.delete('/:id', authMiddleware, roleMiddleware(['organizador']), feirasController.deletar);
 
 module.exports = router;

@@ -6,7 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret_key_temporaria';
 
 const authController = {
   async register(req, res) {
-    const { nome, email, senha, tipo } = req.body;
+    const { nome, email, senha, tipo, whatsapp } = req.body;
     
     if (!nome || !email || !senha || !tipo) {
       return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
@@ -23,8 +23,8 @@ const authController = {
       const hashSenha = await bcrypt.hash(senha, salt);
 
       const result = await db.query(
-        'INSERT INTO users (nome, email, senha, tipo, status_aprovacao) VALUES ($1, $2, $3, $4, $5) RETURNING id, nome, email, tipo, status_aprovacao',
-        [nome, email, hashSenha, tipo, status_aprovacao]
+        'INSERT INTO users (nome, email, senha, tipo, status_aprovacao, whatsapp) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, nome, email, tipo, status_aprovacao',
+        [nome, email, hashSenha, tipo, status_aprovacao, whatsapp]
       );
 
       res.status(201).json({ 

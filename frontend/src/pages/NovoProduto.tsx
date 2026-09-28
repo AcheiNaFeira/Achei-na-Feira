@@ -10,19 +10,30 @@ export function NovoProduto() {
     nome: '',
     descricao: '',
     preco: '',
-    categoria: 'Frutas & Verduras',
-    emoji: '🍎',
-    imagem_url: ''
+    categoria: 'Frutas & Verduras'
   });
+  const [imagem, setImagem] = useState<File | null>(null);
 
   const handleChange = (e: any) => {
     setFormData({...formData, [e.target.name]: e.target.value});
   };
 
+  const handleImage = (e: any) => {
+    if (e.target.files && e.target.files[0]) {
+      setImagem(e.target.files[0]);
+    }
+  };
+
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+    if (!imagem) return alert('Por favor, envie uma imagem do produto.');
+
     try {
-      await api.post('/produtos', formData);
+      const data = new FormData();
+      Object.entries(formData).forEach(([key, val]) => data.append(key, val));
+      data.append('imagem', imagem);
+
+      await api.post('/produtos', data, { headers: { 'Content-Type': 'multipart/form-data' }});
       alert('Produto cadastrado com sucesso!');
       navigate('/feirante');
     } catch (err) {
@@ -36,6 +47,9 @@ export function NovoProduto() {
         <button className="back-link" onClick={() => navigate('/feirante')}><ArrowLeft size={16} /> Voltar</button>
         <h1 style={{marginTop: 20}}>Novo Produto</h1>
         <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: 15, marginTop: 20}}>
+          <label>Foto do Produto (Obrigatório)
+            <input type="file" required accept="image/*" onChange={handleImage} style={{width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4, background: '#fff'}} />
+          </label>
           <label>Nome do Produto
             <input name="nome" required value={formData.nome} onChange={handleChange} style={{width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4}} />
           </label>
@@ -52,14 +66,6 @@ export function NovoProduto() {
                 <option>Alimentos</option>
                 <option>Laticínios</option>
               </select>
-            </label>
-          </div>
-          <div style={{display: 'flex', gap: 15}}>
-            <label style={{flex: 1}}>URL da Foto/Imagem
-              <input type="url" name="imagem_url" placeholder="https://..." value={formData.imagem_url} onChange={handleChange} style={{width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4}} />
-            </label>
-            <label style={{width: 100}}>Emoji
-              <input name="emoji" value={formData.emoji} onChange={handleChange} style={{width: '100%', padding: 10, border: '1px solid #ccc', borderRadius: 4}} />
             </label>
           </div>
           <label>Descrição Detalhada

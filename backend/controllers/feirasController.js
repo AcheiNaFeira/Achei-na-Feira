@@ -48,7 +48,7 @@ const feirasController = {
     const { id } = req.params;
     try {
       const result = await db.query(`
-        SELECT p.*, u.nome as feirante_nome 
+        SELECT p.*, u.nome as feirante_nome, u.whatsapp as feirante_whatsapp
         FROM produtos p
         JOIN participacoes part ON p.feirante_id = part.feirante_id
         JOIN users u ON p.feirante_id = u.id
@@ -65,6 +65,7 @@ const feirasController = {
   async criar(req, res) {
     const { nome, local, data, hora_inicio, hora_fim, descricao } = req.body;
     const organizador_id = req.user.id;
+    const imagem_url = req.file ? `/uploads/${req.file.filename}` : null;
 
     if (!nome || !local || !data || !hora_inicio || !hora_fim) {
       return res.status(400).json({ error: 'Campos obrigatórios não preenchidos.' });
@@ -72,8 +73,8 @@ const feirasController = {
 
     try {
       const result = await db.query(
-        'INSERT INTO feiras (nome, local, data, hora_inicio, hora_fim, descricao, organizador_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-        [nome, local, data, hora_inicio, hora_fim, descricao, organizador_id]
+        'INSERT INTO feiras (nome, local, data, hora_inicio, hora_fim, descricao, imagem_url, organizador_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+        [nome, local, data, hora_inicio, hora_fim, descricao, imagem_url, organizador_id]
       );
       res.status(201).json({ message: 'Feira criada com sucesso!', feira: result.rows[0] });
     } catch (err) {
@@ -87,6 +88,7 @@ const feirasController = {
     const { id } = req.params;
     const { nome, local, data, hora_inicio, hora_fim, descricao } = req.body;
     const organizador_id = req.user.id;
+    const nova_imagem_url = req.file ? `/uploads/${req.file.filename}` : null;
 
     try {
       // Verifica se a feira existe e pertence ao organizador logado
@@ -95,10 +97,16 @@ const feirasController = {
         return res.status(404).json({ error: 'Feira não encontrada ou você não tem permissão para editá-la.' });
       }
 
-      const result = await db.query(
-        'UPDATE feiras SET nome = $1, local = $2, data = $3, hora_inicio = $4, hora_fim = $5, descricao = $6 WHERE id = $7 RETURNING *',
-        [nome, local, data, hora_inicio, hora_fim, descricao, id]
-      );
+      let query, params;
+      if (nova_imagem_url) {
+        query = 'UPDATE feiras SET nome = $1, local = $2, data = $3, hora_inicio = $4, hora_fim = $5, descricao = $6, imagem_url = $7 WHERE id = $8 RETURNING *';
+        params = [nome, local, data, hora_inicio, hora_fim, descricao, nova_imagem_url, id];
+      } else {
+        query = 'UPDATE feiras SET nome = $1, local = $2, data = $3, hora_inicio = $4, hora_fim = $5, descricao = $6 WHERE id = $7 RETURNING *';
+        params = [nome, local, data, hora_inicio, hora_fim, descricao, id];
+      }
+
+      const result = await db.query(query, params);
 
       res.json({ message: 'Feira atualizada com sucesso!', feira: result.rows[0] });
     } catch (err) {

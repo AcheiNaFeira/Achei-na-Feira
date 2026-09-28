@@ -1,21 +1,50 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, CalendarDays, ListFilter, MapPin } from 'lucide-react';
-import { Button, MarketCard, ProductCard, SearchBar, Shell } from '../components/Shared';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { SearchBar, Shell, MarketCard, ProductCard } from '../components/Shared';
 import api from '../api';
 
 export function Listing({ productsOnly = false }: { productsOnly?: boolean }) { 
   const [items, setItems] = useState([]);
-  const [query, setQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const endpoint = productsOnly ? '/produtos' : '/feiras';
-    api.get(endpoint).then(res => setItems(res.data)).catch(console.error);
-  }, [productsOnly]);
+  // Estado de URL: mantém o histórico de filtros e permite navegação direta
+  const busca = searchParams.get('busca') || '';
+  const categoria = searchParams.get('categoria') || '';
+  const cidade = searchParams.get('cidade') || '';
 
+  // Efeito disparado sempre que os filtros (URL) mudam
+  // RF07 e RNF02: Motor de Busca Inteligente / Sistema de Filtros
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const endpoint = productsOnly ? '/produtos' : '/feiras';
+        
+        // Passa os parâmetros de busca para o backend
+        const params = new URLSearchParams();
+        if (busca) params.append(productsOnly ? 'busca' : 'cidade', busca); 
+        if (categoria) params.append('categoria', categoria);
+        if (cidade) params.append('cidade', cidade);
+
+        const res = await api.get(`${endpoint}?${params.toString()}`);
+        setItems(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchItems();
+  }, [productsOnly, busca, categoria, cidade]);
+
+  const setFilter = (key: string, value: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (value) newParams.set(key, value);
+    else newParams.delete(key);
+    setSearchParams(newParams);
+  };
+
+  // We handle frontend filter for name if backend doesn't filter by name for feiras
   const filtered = items.filter((item: any) => 
-    item.nome.toLowerCase().includes(query.toLowerCase())
+    !productsOnly ? item.nome.toLowerCase().includes(busca.toLowerCase()) : true
   );
 
   return (
@@ -25,22 +54,55 @@ export function Listing({ productsOnly = false }: { productsOnly?: boolean }) {
           <span className="kicker">{productsOnly ? 'CATÁLOGO LOCAL' : 'DESCUBRA NA SUA CIDADE'}</span>
           <h1>{productsOnly ? 'Produtos perto de você' : 'Feiras próximas'}</h1>
         </div>
-        <SearchBar onSearch={setQuery} />
+        <SearchBar onSearch={(val) => setFilter('busca', val)} initialValue={busca} />
       </section>
       
-      <div className="filter-row">
-        <Button variant="soft"><MapPin size={16} /> Joinville <ChevronDown size={15} /></Button>
-        <Button variant="outline"><CalendarDays size={16} /> Quando? <ChevronDown size={15} /></Button>
-        <Button variant="outline"><ListFilter size={16} /> Filtros</Button>
-      </div>
-
-      <div className={`${productsOnly ? 'product-grid' : 'market-grid'} listing-grid`}>
-        {filtered.map((item: any) => 
-          productsOnly ? <ProductCard key={item.id} product={item} /> : <MarketCard key={item.id} market={item} onClick={() => navigate(`/feira/${item.id}`)} />
+      <div className="filter-row" style={{display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10}}>
+        {!productsOnly && (
+          <select 
+            className="button button-soft" 
+            value={cidade} 
+            onChange={e => setFilter('cidade', e.target.value)}
+            style={{padding: '8px 12px', border: 'none', background: '#dbe4da', borderRadius: 8, cursor: 'pointer', outline: 'none'}}
+          >
+            <option value="">Todas as Cidades</option>
+            <option value="Joinville">Joinville</option>
+            <option value="Araquari">Araquari</option>
+            <option value="Garuva">Garuva</option>
+          </select>
+        )}
+        
+        {productsOnly && (
+          <select 
+            className="button button-outline" 
+            value={categoria} 
+            onChange={e => setFilter('categoria', e.target.value)}
+            style={{padding: '8px 12px', borderRadius: 8, cursor: 'pointer', outline: 'none'}}
+          >
+            <option value="">Todas as Categorias</option>
+            <option value="Frutas & Verduras">Frutas & Verduras</option>
+            <option value="Orgânicos">Orgânicos</option>
+            <option value="Artesanato">Artesanato</option>
+            <option value="Flores">Flores</option>
+            <option value="Alimentos">Alimentos</option>
+            <option value="Laticínios">Laticínios</option>
+          </select>
         )}
       </div>
+
+      {filtered.length === 0 ? (
+        <div style={{padding: '40px 0', textAlign: 'center', color: '#666'}}>
+          Nenhum resultado encontrado para estes filtros.
+        </div>
+      ) : (
+        <div className={`${productsOnly ? 'product-grid' : 'market-grid'} listing-grid`}>
+          {filtered.map((item: any) => 
+            productsOnly 
+              ? <ProductCard key={item.id} product={item} /> 
+              : <MarketCard key={item.id} market={item} onClick={() => navigate(`/feira/${item.id}`)} />
+          )}
+        </div>
+      )}
     </Shell>
   );
 }
-
-function ChevronDown({ size }: { size: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg> }

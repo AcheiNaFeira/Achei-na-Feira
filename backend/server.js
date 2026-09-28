@@ -15,6 +15,7 @@ const PORT = process.env.PORT || 3001;
 // Middlewares
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(require('path').join(__dirname, 'uploads')));
 
 // Criar tabela de usuários (Apenas para garantir que o banco funciona)
 const initDb = async () => {
@@ -28,6 +29,7 @@ const initDb = async () => {
         tipo VARCHAR(50) NOT NULL DEFAULT 'consumidor',
         precisa_trocar_senha BOOLEAN DEFAULT false,
         status_aprovacao VARCHAR(20) DEFAULT 'ativo',
+        whatsapp VARCHAR(20),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
@@ -37,6 +39,7 @@ const initDb = async () => {
       await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS tipo VARCHAR(50) NOT NULL DEFAULT 'consumidor';`);
       await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS precisa_trocar_senha BOOLEAN DEFAULT false;`);
       await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS status_aprovacao VARCHAR(20) DEFAULT 'ativo';`);
+      await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp VARCHAR(20);`);
     } catch (e) {
       // Ignora erro se coluna já existir em outros dialetos
     }
@@ -50,10 +53,15 @@ const initDb = async () => {
         hora_inicio TIME NOT NULL,
         hora_fim TIME NOT NULL,
         descricao TEXT,
+        imagem_url TEXT,
         organizador_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    
+    try {
+      await db.query(`ALTER TABLE feiras ADD COLUMN IF NOT EXISTS imagem_url TEXT;`);
+    } catch (e) {}
 
     await db.query(`
       CREATE TABLE IF NOT EXISTS produtos (

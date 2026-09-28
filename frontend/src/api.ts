@@ -14,4 +14,10 @@ api.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
+export const getImageUrl = (path: string) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `http://localhost:3001${path}`;
+};
+
 export default api;

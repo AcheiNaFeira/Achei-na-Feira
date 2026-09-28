@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Bell, Pencil, Plus } from 'lucide-react';
 import { Button, DashboardNav } from '../components/Shared';
-import api from '../api';
+import api, { getImageUrl } from '../api';
 
 export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organizador' }) {
   const navigate = useNavigate();
@@ -79,7 +79,13 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
             {items.slice(0, 3).map((item: any) => (
               <div className="activity-row" key={item.id}>
                 <div className="mini-art">
-                  {item.imagem_url ? <img src={item.imagem_url} alt="img" style={{width: 24, height: 24, borderRadius: 4, objectFit: 'cover'}} /> : (item.emoji || '📦')}
+                  {item.imagem_url ? (
+                    <img src={getImageUrl(item.imagem_url)} alt="img" style={{width: 24, height: 24, borderRadius: 4, objectFit: 'cover'}} />
+                  ) : (
+                    <div style={{width: 24, height: 24, background: '#f97316', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 'bold'}}>
+                      {item.nome.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                 </div>
                 <div><b>{item.nome}</b></div>
                 <Pencil size={15} />

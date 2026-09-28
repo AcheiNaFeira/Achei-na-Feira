@@ -4,6 +4,8 @@ import { ArrowLeft, Filter, Heart, MapPin, Ticket } from 'lucide-react';
 import { Button, ProductCard, Shell } from '../components/Shared';
 import api from '../api';
 
+import { getImageUrl } from '../api';
+
 export function FairDetail() { 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -22,7 +24,15 @@ export function FairDetail() {
       <div className="detail-wrap">
         <button className="back-link" onClick={() => navigate('/feiras')}><ArrowLeft size={16} /> Voltar para feiras</button>
         <div className="detail-hero">
-          <div className="detail-visual mint">🥬</div>
+          <div 
+            className="detail-visual" 
+            style={feira.imagem_url 
+              ? { backgroundImage: `url(${getImageUrl(feira.imagem_url)})`, backgroundSize: 'cover', backgroundPosition: 'center' } 
+              : { background: '#f97316', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+            }
+          >
+            {!feira.imagem_url && <span style={{ color: '#fff', fontSize: '28px', fontFamily: 'serif', fontWeight: 'bold', textAlign: 'center', padding: '20px' }}>{feira.nome}</span>}
+          </div>
           <div className="detail-info">
             <span className="kicker">{feira.data.split('T')[0]}</span>
             <h1>{feira.nome}</h1>

@@ -21,7 +21,6 @@ export function Header() {
         <nav className={open ? 'nav nav-open' : 'nav'}>
           <button onClick={() => { navigate('/feiras'); setOpen(false); }}>Feiras</button>
           <button onClick={() => { navigate('/produtos'); setOpen(false); }}>Produtos</button>
-          <button onClick={() => { navigate('/manual'); setOpen(false); }}>Manual</button>
           <button onClick={() => { navigate('/login'); setOpen(false); }} className="nav-login">Entrar</button>
         </nav>
         <button className="mobile-menu" aria-label="Abrir menu" onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</button>
@@ -30,23 +29,31 @@ export function Header() {
   );
 }
 
-export function SearchBar({ onSearch }: { onSearch?: (value: string) => void }) { 
-  const [value, setValue] = useState(''); 
+export function SearchBar({ onSearch, initialValue = '' }: { onSearch?: (value: string) => void, initialValue?: string }) { 
+  const [value, setValue] = useState(initialValue); 
   return (
     <div className="searchbar">
       <Search size={19} />
       <input placeholder="O que você procura?" value={value} onChange={e => { setValue(e.target.value); onSearch?.(e.target.value); }} />
-      <button aria-label="Buscar"><ArrowRight size={18} /></button>
+      <button aria-label="Buscar" onClick={() => onSearch?.(value)}><ArrowRight size={18} /></button>
     </div>
   );
 }
 
+import { getImageUrl } from '../api';
+
 export function MarketCard({ market, onClick }: { market: any; onClick: () => void }) { 
   return (
     <button className="market-card" onClick={onClick}>
-      <div className={`market-image ${market.color || 'mint'}`}>
-        <span>🥬</span>
-        <small><MapPin size={12} /> {market.local}</small>
+      <div 
+        className="market-image" 
+        style={market.imagem_url 
+          ? { backgroundImage: `url(${getImageUrl(market.imagem_url)})`, backgroundSize: 'cover', backgroundPosition: 'center' } 
+          : { background: '#f97316', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+        }
+      >
+        {!market.imagem_url && <span style={{ color: '#fff', fontSize: '24px', fontFamily: 'serif', fontWeight: 'bold', textAlign: 'center', padding: '10px' }}>{market.nome}</span>}
+        <small style={{position: 'absolute', bottom: 10, left: 10, background: 'rgba(0,0,0,0.6)', color: '#fff', padding: '4px 8px', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 4}}><MapPin size={12} /> {market.local}</small>
       </div>
       <div className="market-content">
         <div className="eyebrow">FEIRA</div>
@@ -62,10 +69,17 @@ export function MarketCard({ market, onClick }: { market: any; onClick: () => vo
 }
 
 export function ProductCard({ product }: { product: any }) { 
+  const openWhatsApp = (e: any) => {
+    e.stopPropagation();
+    const phone = product.feirante_whatsapp?.replace(/\D/g, '');
+    if (phone) {
+      window.open(`https://wa.me/${phone}?text=Olá, vi seu produto ${encodeURIComponent(product.nome)} no Achei na Feira!`, '_blank');
+    }
+  };
+
   return (
     <article className="product-card">
-      <div className={`product-image ${product.color || 'tomato'}`} style={product.imagem_url ? { backgroundImage: `url(${product.imagem_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}>
-        {!product.imagem_url && <span>{product.emoji || '📦'}</span>}
+      <div className="product-image" style={product.imagem_url ? { backgroundImage: `url(${getImageUrl(product.imagem_url)})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: '#e2e8f0' }}>
         <button aria-label="Favoritar"><Heart size={17} /></button>
       </div>
       <div className="product-content">
@@ -73,6 +87,11 @@ export function ProductCard({ product }: { product: any }) {
         <h3>{product.nome}</h3>
         <p>{product.feirante_nome}</p>
         <strong>R$ {product.preco}</strong>
+        {product.feirante_whatsapp && (
+          <Button variant="soft" onClick={openWhatsApp} style={{marginTop: 10, width: '100%', display: 'flex', justifyContent: 'center', gap: 5, padding: '8px 0'}}>
+            Contatar via WhatsApp
+          </Button>
+        )}
       </div>
     </article>
   );
@@ -116,10 +135,9 @@ export function DashboardNav({ role }: { role: 'feirante' | 'organizador' }) {
       </div>
       <nav>
         <button className="active" onClick={() => navigate(`/${role}`)}><Home size={17} /> Visão geral</button>
-        <button onClick={() => navigate(role === 'feirante' ? '/catalogo' : '/minhas-feiras')}>
-          <Store size={17} /> {role === 'feirante' ? 'Meu catálogo' : 'Minhas feiras'}
+        <button onClick={() => navigate(role === 'feirante' ? '/novo-produto' : '/nova-feira')}>
+          <Plus size={17} /> {role === 'feirante' ? 'Novo produto' : 'Nova feira'}
         </button>
-        <button><Settings size={17} /> Configurações</button>
       </nav>
       <button className="dashboard-exit" onClick={logout}>Sair da conta</button>
     </aside>
