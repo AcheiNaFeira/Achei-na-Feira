@@ -52,22 +52,22 @@ export function NovoProduto() {
         <h1 style={{marginTop: 20}}>Novo Produto</h1>
         <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: 15, marginTop: 20}}>
           <label>Fotos do Produto (Pode selecionar várias)
-            <input type="file" multiple accept="image/*" onChange={handleImages} required />
+            <input type="file" multiple accept="image/*" onChange={handleImages} required style={{ display: 'block', width: '100%', padding: '10px', marginTop: '5px', border: '1px solid #ccc', borderRadius: '4px', background: '#fff' }} />
           </label>
           <small style={{color: '#64748b', marginTop: -10}}>Selecione até 5 fotos para criar um carrossel na página do produto.</small>
 
           <label>Nome do produto
-            <input type="text" name="nome" placeholder="Ex: Tomate Carmem" value={formData.nome} onChange={handleChange} required />
+            <input type="text" name="nome" placeholder="Ex: Tomate Carmem" value={formData.nome} onChange={handleChange} required style={{ display: 'block', width: '100%', padding: '10px', marginTop: '5px', border: '1px solid #ccc', borderRadius: '4px' }} />
           </label>
           <label>Descrição
-            <textarea name="descricao" placeholder="Detalhes do produto, cultivo, etc." value={formData.descricao} onChange={handleChange} />
+            <textarea name="descricao" placeholder="Detalhes do produto, cultivo, etc." value={formData.descricao} onChange={handleChange} style={{ display: 'block', width: '100%', padding: '10px', marginTop: '5px', border: '1px solid #ccc', borderRadius: '4px', minHeight: '80px' }} />
           </label>
           <div style={{display: 'flex', gap: 15}}>
             <label style={{flex: 1}}>Preço (R$)
-              <input type="number" step="0.01" name="preco" placeholder="0.00" value={formData.preco} onChange={handleChange} required />
+              <input type="number" step="0.01" name="preco" placeholder="0.00" value={formData.preco} onChange={handleChange} required style={{ display: 'block', width: '100%', padding: '10px', marginTop: '5px', border: '1px solid #ccc', borderRadius: '4px' }} />
             </label>
             <label style={{flex: 1}}>Categoria
-              <select name="categoria" value={formData.categoria} onChange={handleChange}>
+              <select name="categoria" value={formData.categoria} onChange={handleChange} style={{ display: 'block', width: '100%', padding: '10px', marginTop: '5px', border: '1px solid #ccc', borderRadius: '4px', background: '#fff' }}>
                 <option>Frutas & Verduras</option>
                 <option>Orgânicos</option>
                 <option>Artesanato</option>
