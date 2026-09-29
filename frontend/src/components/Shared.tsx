@@ -49,7 +49,7 @@ export function SearchBar({ onSearch, initialValue = '' }: { onSearch?: (value: 
   );
 }
 
-import { getImageUrl } from '../api';
+import { getImageUrl, formatDateBR } from '../api';
 
 export function MarketCard({ market, onClick }: { market: any; onClick: () => void }) { 
   return (
@@ -68,7 +68,7 @@ export function MarketCard({ market, onClick }: { market: any; onClick: () => vo
         <div className="eyebrow">FEIRA</div>
         <h3>{market.nome}</h3>
         <p><MapPin size={14} /> {market.local}</p>
-        <p><CalendarDays size={14} /> {market.data?.split('T')[0]} · {market.hora_inicio}</p>
+        <p><CalendarDays size={14} /> {formatDateBR(market.data)} – {market.hora_inicio}</p>
         <div className="card-footer">
           <span>Ver mais</span><ArrowRight size={17} />
         </div>
@@ -90,19 +90,17 @@ export function ProductCard({ product }: { product: any }) {
     try {
       const res = await api.post(`/produtos/${product.id}/like`);
       setLikes(res.data.likes);
+      setFav(res.data.liked);
 
-      const saved = JSON.parse(localStorage.getItem('fav_prods') || '[]');
-      if (!saved.includes(product.id)) {
-        saved.push(product.id);
-        localStorage.setItem('fav_prods', JSON.stringify(saved));
-        setFav(true);
-      }
-    } catch (err: any) {
-      if (err.response?.status === 429) {
-        alert(err.response.data.error);
+      let saved = JSON.parse(localStorage.getItem('fav_prods') || '[]');
+      if (res.data.liked) {
+        if (!saved.includes(product.id)) saved.push(product.id);
       } else {
-        alert('Erro ao curtir produto.');
+        saved = saved.filter((id: number) => id !== product.id);
       }
+      localStorage.setItem('fav_prods', JSON.stringify(saved));
+    } catch (err: any) {
+      alert('Erro ao curtir produto.');
     }
   };
 

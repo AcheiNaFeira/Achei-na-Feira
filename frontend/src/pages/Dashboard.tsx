@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Pencil, Plus, Trash, Users, LogOut } from 'lucide-react';
 import { Button, DashboardNav } from '../components/Shared';
-import api, { getImageUrl } from '../api';
+import api, { getImageUrl, formatDateBR } from '../api';
 
 export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organizador' }) {
   const navigate = useNavigate();
@@ -144,7 +144,7 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
                   </div>
                   <div>
                     <b>{item.nome}</b>
-                    {organizer && <p style={{fontSize: 12, color: '#64748b', margin: 0}}>{item.data?.split('T')[0]}</p>}
+                    {organizer && <p style={{fontSize: 12, color: '#64748b', margin: 0}}>{formatDateBR(item.data)}</p>}
                   </div>
                 </div>
                 
@@ -218,7 +218,7 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
               <form onSubmit={enviarConvite} style={{display: 'flex', flexDirection: 'column', gap: 10, marginTop: 15}}>
                 <select value={selectedFeira} onChange={e => setSelectedFeira(e.target.value)} required style={{padding: '10px', border: '1px solid #dbe4da', borderRadius: '4px'}}>
                   <option value="">Selecione a feira...</option>
-                  {items.map((f: any) => <option key={f.id} value={f.id}>{f.nome} ({f.data?.split('T')[0]})</option>)}
+                  {items.map((f: any) => <option key={f.id} value={f.id}>{f.nome} ({formatDateBR(f.data)})</option>)}
                 </select>
                 <select value={selectedFeirante} onChange={e => setSelectedFeirante(e.target.value)} required style={{padding: '10px', border: '1px solid #dbe4da', borderRadius: '4px'}}>
                   <option value="">Selecione o feirante...</option>

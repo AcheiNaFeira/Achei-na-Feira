@@ -22,19 +22,17 @@ export function ProductDetail() {
     try {
       const res = await api.post(`/produtos/${id}/like`);
       setProduto({...produto, likes: res.data.likes});
+      setFav(res.data.liked);
       
-      const saved = JSON.parse(localStorage.getItem('fav_prods') || '[]');
-      if (!saved.includes(Number(id))) {
-        saved.push(Number(id));
-        localStorage.setItem('fav_prods', JSON.stringify(saved));
-        setFav(true);
-      }
-    } catch (err: any) {
-      if (err.response?.status === 429) {
-        alert(err.response.data.error);
+      let saved = JSON.parse(localStorage.getItem('fav_prods') || '[]');
+      if (res.data.liked) {
+        if (!saved.includes(Number(id))) saved.push(Number(id));
       } else {
-        alert('Erro ao curtir.');
+        saved = saved.filter((savedId: number) => savedId !== Number(id));
       }
+      localStorage.setItem('fav_prods', JSON.stringify(saved));
+    } catch (err: any) {
+      alert('Erro ao curtir.');
     }
   };
 

@@ -4,7 +4,7 @@ import { ArrowLeft, Filter, Heart, MapPin, Ticket } from 'lucide-react';
 import { Button, ProductCard, Shell } from '../components/Shared';
 import api from '../api';
 
-import { getImageUrl } from '../api';
+import { getImageUrl, formatDateBR } from '../api';
 
 export function FairDetail() { 
   const { id } = useParams();
@@ -31,19 +31,17 @@ export function FairDetail() {
     try {
       const res = await api.post(`/feiras/${id}/like`);
       setFeira({...feira, likes: res.data.likes});
+      setSalvo(res.data.liked);
       
-      const saved = JSON.parse(localStorage.getItem('fav_feiras') || '[]');
-      if (!saved.includes(id)) {
-        saved.push(id);
-        localStorage.setItem('fav_feiras', JSON.stringify(saved));
-        setSalvo(true);
-      }
-    } catch (err: any) {
-      if (err.response?.status === 429) {
-        alert(err.response.data.error);
+      let saved = JSON.parse(localStorage.getItem('fav_feiras') || '[]');
+      if (res.data.liked) {
+        if (!saved.includes(id)) saved.push(id);
       } else {
-        alert('Erro ao curtir.');
+        saved = saved.filter((savedId: string) => savedId !== id);
       }
+      localStorage.setItem('fav_feiras', JSON.stringify(saved));
+    } catch (err: any) {
+      alert('Erro ao curtir.');
     }
   };
 
@@ -64,7 +62,7 @@ export function FairDetail() {
             {!feira.imagem_url && <span style={{ position: 'relative', inset: 0, color: '#fff', fontSize: '28px', fontFamily: 'serif', fontWeight: 'bold', textAlign: 'center', padding: '20px' }}>{feira.nome}</span>}
           </div>
           <div className="detail-info">
-            <span className="kicker">{feira.data.split('T')[0]}</span>
+            <span className="kicker">{formatDateBR(feira.data)}</span>
             <h1>{feira.nome}</h1>
             <p className="lead"><MapPin size={17} /> {feira.local} · {feira.hora_inicio} – {feira.hora_fim}</p>
             <p>{feira.descricao}</p>

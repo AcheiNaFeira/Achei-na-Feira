@@ -45,6 +45,23 @@ export function EditarFeira() {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+
+    if (formData.data) {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const selectedDate = new Date(formData.data + 'T00:00:00');
+      
+      if (selectedDate < today) {
+        return alert('Esta data já passou.');
+      }
+      
+      const maxDate = new Date();
+      maxDate.setFullYear(today.getFullYear() + 5);
+      if (selectedDate > maxDate) {
+        return alert('A feira pode ser registrada no máximo até 5 anos para frente.');
+      }
+    }
+
     try {
       const data = new FormData();
       Object.entries(formData).forEach(([key, val]) => data.append(key, val));
