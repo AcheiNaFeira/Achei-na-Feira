@@ -20,13 +20,25 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const isPast = (dataStr: string) => {
+    if (!dataStr) return false;
+    const d = new Date(dataStr.split('T')[0] + 'T00:00:00');
+    return d < today;
+  };
+
+  const itemsAtivos = organizer ? items.filter(i => !isPast(i.data)) : items;
+  const itemsPassados = organizer ? items.filter(i => isPast(i.data)) : [];
+
   useEffect(() => {
     fetchData();
   }, [role, organizer, user.id]);
 
   const fetchData = () => {
     if (organizer) {
-      api.get('/feiras').then(res => setItems(res.data.filter((f: any) => f.organizador_id === user.id))).catch(console.error);
+      api.get('/feiras/minhas').then(res => setItems(res.data)).catch(console.error);
       api.get('/users/feirantes').then(res => setFeirantes(res.data)).catch(console.error);
     } else {
       api.get('/produtos').then(res => setItems(res.data.filter((p: any) => p.feirante_id === user.id))).catch(console.error);
@@ -130,7 +142,7 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
                 <h2>{organizer ? 'Suas feiras ativas' : 'Seus produtos'}</h2>
               </div>
             </div>
-            {items.map((item: any) => (
+            {itemsAtivos.map((item: any) => (
               <div className="activity-row" key={item.id} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f1f5f9'}}>
                 <div style={{display: 'flex', alignItems: 'center', gap: 15}}>
                   <div className="mini-art">
@@ -170,8 +182,44 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
                 </div>
               </div>
             ))}
-            {items.length === 0 && <p style={{color: '#64748b'}}>Nenhum item cadastrado.</p>}
+            {itemsAtivos.length === 0 && <p style={{color: '#64748b'}}>Nenhum item cadastrado.</p>}
           </div>
+
+          {organizer && itemsPassados.length > 0 && (
+            <div className="panel" style={{gridColumn: 'span 2', marginTop: 15, opacity: 0.8}}>
+              <div className="panel-head">
+                <div>
+                  <span className="kicker">HISTÓRICO</span>
+                  <h2>Feiras que já aconteceram</h2>
+                </div>
+              </div>
+              {itemsPassados.map((item: any) => (
+                <div className="activity-row" key={item.id} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f1f5f9'}}>
+                  <div style={{display: 'flex', alignItems: 'center', gap: 15}}>
+                    <div className="mini-art">
+                      {item.imagem_url ? (
+                        <img src={getImageUrl(item.imagem_url.split(',')[0])} alt="img" style={{width: 32, height: 32, borderRadius: 4, objectFit: 'cover', filter: 'grayscale(100%)'}} />
+                      ) : (
+                        <div style={{width: 32, height: 32, background: '#94a3b8', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 'bold'}}>
+                          {item.nome.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <b>{item.nome}</b>
+                      <p style={{fontSize: 12, color: '#ef4444', margin: 0}}>Finalizada em {formatDateBR(item.data)}</p>
+                    </div>
+                  </div>
+                  
+                  <div style={{display: 'flex', gap: 10}}>
+                    <Button variant="ghost" onClick={() => deletarFeira(item.id)} style={{color: '#ef4444'}} title="Deletar Feira Permanente">
+                      <Trash size={16} /> Deletar
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {!organizer && (
             <div className="panel">
@@ -218,7 +266,7 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
               <form onSubmit={enviarConvite} style={{display: 'flex', flexDirection: 'column', gap: 10, marginTop: 15}}>
                 <select value={selectedFeira} onChange={e => setSelectedFeira(e.target.value)} required style={{padding: '10px', border: '1px solid #dbe4da', borderRadius: '4px'}}>
                   <option value="">Selecione a feira...</option>
-                  {items.map((f: any) => <option key={f.id} value={f.id}>{f.nome} ({formatDateBR(f.data)})</option>)}
+                  {itemsAtivos.map((f: any) => <option key={f.id} value={f.id}>{f.nome} ({formatDateBR(f.data)})</option>)}
                 </select>
                 <select value={selectedFeirante} onChange={e => setSelectedFeirante(e.target.value)} required style={{padding: '10px', border: '1px solid #dbe4da', borderRadius: '4px'}}>
                   <option value="">Selecione o feirante...</option>

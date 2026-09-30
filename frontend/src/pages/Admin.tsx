@@ -251,14 +251,14 @@ export function Admin() {
           <div className="panel">
             <h2>Gestão de Feiras</h2>
             {feiras.length === 0 ? <p>Nenhuma feira cadastrada.</p> : feiras.map((f: any) => (
-              <div key={f.id} className="activity-row" style={{borderBottom: '1px solid #e2e8f0', borderTop: 'none', padding: '15px 0'}}>
+              <div key={f.id} className="activity-row" style={{borderBottom: '1px solid #e2e8f0', borderTop: 'none', padding: '15px 0', cursor: 'pointer'}} onClick={() => navigate(`/feira/${f.id}`)}>
                 <div className="avatar" style={{background: '#264f3d'}}><Tent size={16}/></div>
                 <div>
                   <b>{f.nome}</b>
                   <span>{f.local}</span>
                 </div>
                 <div>
-                  <Button variant="outline" onClick={() => deletarFeira(f.id)} style={{borderColor: '#ef4444', color: '#ef4444'}}>
+                  <Button variant="outline" onClick={(e) => { e.stopPropagation(); deletarFeira(f.id); }} style={{borderColor: '#ef4444', color: '#ef4444'}}>
                     <Trash2 size={14} /> Deletar
                   </Button>
                 </div>
@@ -271,14 +271,14 @@ export function Admin() {
           <div className="panel">
             <h2>Gestão de Produtos</h2>
             {produtos.length === 0 ? <p>Nenhum produto cadastrado.</p> : produtos.map((p: any) => (
-              <div key={p.id} className="activity-row" style={{borderBottom: '1px solid #e2e8f0', borderTop: 'none', padding: '15px 0'}}>
+              <div key={p.id} className="activity-row" style={{borderBottom: '1px solid #e2e8f0', borderTop: 'none', padding: '15px 0', cursor: 'pointer'}} onClick={() => navigate(`/produto/${p.id}`)}>
                 <div className="avatar" style={{background: '#f59e0b'}}><Package size={16}/></div>
                 <div>
                   <b>{p.nome}</b>
                   <span>R$ {Number(p.preco).toFixed(2)}</span>
                 </div>
                 <div>
-                  <Button variant="outline" onClick={() => deletarProduto(p.id)} style={{borderColor: '#ef4444', color: '#ef4444'}}>
+                  <Button variant="outline" onClick={(e) => { e.stopPropagation(); deletarProduto(p.id); }} style={{borderColor: '#ef4444', color: '#ef4444'}}>
                     <Trash2 size={14} /> Deletar
                   </Button>
                 </div>

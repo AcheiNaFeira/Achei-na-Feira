@@ -64,7 +64,12 @@ export function FairDetail() {
           <div className="detail-info">
             <span className="kicker">{formatDateBR(feira.data)}</span>
             <h1>{feira.nome}</h1>
-            <p className="lead"><MapPin size={17} /> {feira.local} · {feira.hora_inicio} – {feira.hora_fim}</p>
+            <p className="lead"><MapPin size={17} /> {feira.local} • {feira.hora_inicio} – {feira.hora_fim}</p>
+            {feira.endereco_completo && (
+              <p style={{marginTop: -10, marginBottom: 20, color: '#64748b', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6}}>
+                <MapPin size={14} /> {feira.endereco_completo}
+              </p>
+            )}
             <p>{feira.descricao}</p>
             <div className="detail-actions">
               <Button onClick={openMaps} variant="primary">

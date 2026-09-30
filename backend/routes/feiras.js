@@ -8,6 +8,7 @@ const upload = require('../middlewares/upload');
 
 // Rotas públicas
 router.get('/', feirasController.listar);
+router.get('/minhas', authMiddleware, roleMiddleware(['organizador']), feirasController.listarMinhas);
 router.get('/:id', feirasController.detalhe);
 router.get('/:id/feirantes', convitesController.listarFeirantes);
 router.get('/:id/produtos', feirasController.listarProdutos);

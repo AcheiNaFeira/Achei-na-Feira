@@ -17,13 +17,24 @@ const feirasController = {
       query += ` AND data = $${params.length}`;
     }
 
-    query += ' ORDER BY data DESC';
+    query += ' AND data >= CURRENT_DATE ORDER BY data DESC';
 
     try {
       const result = await db.query(query, params);
       res.json(result.rows);
     } catch (err) {
       console.error('Erro ao listar feiras:', err);
+      res.status(500).json({ error: 'Erro no servidor' });
+    }
+  },
+
+  // GET /api/feiras/minhas
+  async listarMinhas(req, res) {
+    try {
+      const result = await db.query('SELECT * FROM feiras WHERE organizador_id = $1 ORDER BY data DESC', [req.user.id]);
+      res.json(result.rows);
+    } catch (err) {
+      console.error('Erro ao listar minhas feiras:', err);
       res.status(500).json({ error: 'Erro no servidor' });
     }
   },
