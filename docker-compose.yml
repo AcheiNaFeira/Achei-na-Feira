@@ -13,5 +13,42 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: acheinafeira-backend
+    environment:
+      - PORT=3001
+      - DB_USER=admin
+      - DB_PASSWORD=12345
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=acheinafeira_db
+      - JWT_SECRET=secret_key_temporaria
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: acheinafeira-frontend
+    environment:
+      # API URL point to localhost:3001 because it's accessed by the browser
+      - VITE_API_URL=http://localhost:3001/api
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
 volumes:
   postgres_data:

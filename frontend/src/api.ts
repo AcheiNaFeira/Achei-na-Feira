@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || `${BACKEND_URL}/api`;
+
 const api = axios.create({
-  baseURL: 'http://localhost:3001/api',
+  baseURL: API_URL,
   withCredentials: true
 });
 
@@ -21,7 +24,7 @@ api.interceptors.response.use(
 export const getImageUrl = (path: string) => {
   if (!path) return '';
   if (path.startsWith('http')) return path;
-  return `http://localhost:3001${path}`;
+  return `${BACKEND_URL}${path}`;
 };
 
 export const formatDateBR = (isoString: string) => {
