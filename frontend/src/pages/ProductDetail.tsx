@@ -124,7 +124,15 @@ export function ProductDetail() {
               {produto.feiras.map((f: any) => (
                 <div key={f.id} className="panel" style={{display: 'flex', flexDirection: 'column', gap: 15}}>
                   <div style={{display: 'flex', gap: 10, alignItems: 'center'}}>
-                    <div style={{background: '#fef08a', padding: 10, borderRadius: 8, color: '#ca8a04'}}><Tent size={24}/></div>
+                    <div style={{
+                      width: 44, height: 44, borderRadius: 8, flexShrink: 0,
+                      background: f.imagem_url ? `url(${getImageUrl(f.imagem_url.split(',')[0])})` : '#fef08a',
+                      backgroundSize: 'cover', backgroundPosition: 'center',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#ca8a04'
+                    }}>
+                      {!f.imagem_url && <Tent size={24}/>}
+                    </div>
                     <div>
                       <h3 style={{margin: 0}}>{f.nome}</h3>
                       <p style={{margin: 0, fontSize: 14, color: '#64748b'}}>{f.local}</p>

@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+/// <reference types="vite/client" />
+
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
 const API_URL = import.meta.env.VITE_API_URL || `${BACKEND_URL}/api`;
 
