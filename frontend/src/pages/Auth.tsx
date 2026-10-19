@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button, Logo } from '../components/Shared';
 import api from '../api';
 
 export function Auth() { 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect');
   const [isLogin, setIsLogin] = useState(true);
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
@@ -28,6 +30,8 @@ export function Auth() {
         
         if (user.precisa_trocar_senha) {
           navigate('/nova-senha');
+        } else if (redirect) {
+          navigate(redirect);
         } else {
           navigate(`/${user.tipo}`);
         }

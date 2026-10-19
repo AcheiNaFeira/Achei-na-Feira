@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const db = require('../db');
 
 const convitesController = {
@@ -83,22 +84,31 @@ const convitesController = {
     }
 
     try {
-      // 1. Verificar se a feira existe e pertence ao organizador logado
       const verificaFeira = await db.query('SELECT * FROM feiras WHERE id = $1 AND organizador_id = $2', [feira_id, organizador_id]);
       if (verificaFeira.rows.length === 0) {
         return res.status(403).json({ error: 'Feira não encontrada ou sem permissão.' });
       }
 
-      // 2. Verificar se o feirante existe e é do tipo feirante
       const verificaFeirante = await db.query('SELECT * FROM users WHERE id = $1 AND tipo = $2', [feirante_id, 'feirante']);
       if (verificaFeirante.rows.length === 0) {
         return res.status(404).json({ error: 'Feirante não encontrado.' });
       }
 
-      // 3. Inserir convite (verifica se já não existe antes para não duplicar)
       const verificaParticipacao = await db.query('SELECT * FROM participacoes WHERE feira_id = $1 AND feirante_id = $2', [feira_id, feirante_id]);
       if (verificaParticipacao.rows.length > 0) {
-        return res.status(400).json({ error: 'O feirante já foi convidado para esta feira.' });
+        const atual = verificaParticipacao.rows[0];
+        if (atual.status === 'recusado') {
+          const reenviado = await db.query(
+            "UPDATE participacoes SET status = 'pendente', created_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *",
+            [atual.id]
+          );
+          return res.status(200).json({ message: 'Convite reenviado com sucesso!', convite: reenviado.rows[0] });
+        }
+        return res.status(400).json({
+          error: atual.status === 'aceito'
+            ? 'Este feirante já está confirmado nesta feira.'
+            : 'Este feirante já possui um convite pendente para esta feira.'
+        });
       }
 
       const result = await db.query(
@@ -110,6 +120,80 @@ const convitesController = {
     } catch (err) {
       console.error('Erro ao convidar feirante:', err);
       res.status(500).json({ error: 'Erro no servidor' });
+    }
+  },
+
+  // POST /api/feiras/:id/link-convite (Organizador gera ou obtém o link de convite da feira)
+  async gerarLinkConvite(req, res) {
+    const feira_id = req.params.id;
+    const organizador_id = req.user.id;
+    const { regenerar } = req.body || {};
+
+    try {
+      const verifica = await db.query('SELECT id, nome, convite_token FROM feiras WHERE id = $1 AND organizador_id = $2', [feira_id, organizador_id]);
+      if (verifica.rows.length === 0) {
+        return res.status(403).json({ error: 'Feira não encontrada ou sem permissão.' });
+      }
+
+      let token = verifica.rows[0].convite_token;
+      if (!token || regenerar) {
+        token = crypto.randomBytes(12).toString('hex');
+        await db.query('UPDATE feiras SET convite_token = $1 WHERE id = $2', [token, feira_id]);
+      }
+
+      res.json({ token, feira_nome: verifica.rows[0].nome });
+    } catch (err) {
+      console.error('Erro ao gerar link de convite:', err);
+      res.status(500).json({ error: 'Erro ao gerar link de convite' });
+    }
+  },
+
+  // GET /api/convites/link/:token (Rota pública para visualizar os dados da feira do convite)
+  async obterPorToken(req, res) {
+    const { token } = req.params;
+    try {
+      const result = await db.query(
+        `SELECT f.id, f.nome, f.local, f.endereco_completo, f.data, f.hora_inicio, f.hora_fim, f.descricao, f.imagem_url, u.nome as organizador_nome
+         FROM feiras f
+         LEFT JOIN users u ON f.organizador_id = u.id
+         WHERE f.convite_token = $1`,
+        [token]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Link de convite inválido ou expirado.' });
+      }
+
+      res.json(result.rows[0]);
+    } catch (err) {
+      console.error('Erro ao buscar convite por token:', err);
+      res.status(500).json({ error: 'Erro no servidor' });
+    }
+  },
+
+  // POST /api/convites/link/:token/aceitar (Feirante aceita convite via link)
+  async aceitarPorToken(req, res) {
+    const { token } = req.params;
+    const feirante_id = req.user.id;
+
+    try {
+      const feiraRes = await db.query('SELECT id, nome, data FROM feiras WHERE convite_token = $1', [token]);
+      if (feiraRes.rows.length === 0) {
+        return res.status(404).json({ error: 'Link de convite inválido ou expirado.' });
+      }
+
+      const feira = feiraRes.rows[0];
+      await db.query(
+        `INSERT INTO participacoes (feira_id, feirante_id, status)
+         VALUES ($1, $2, 'aceito')
+         ON CONFLICT (feira_id, feirante_id) DO UPDATE SET status = 'aceito'`,
+        [feira.id, feirante_id]
+      );
+
+      res.json({ message: 'Convite aceito com sucesso! Você já está confirmado na feira.', feira });
+    } catch (err) {
+      console.error('Erro ao aceitar convite por link:', err);
+      res.status(500).json({ error: 'Erro ao aceitar convite' });
     }
   },
 
@@ -138,12 +222,13 @@ const convitesController = {
     const { feira_id, feirante_id } = req.params;
     const organizador_id = req.user.id;
     try {
-      const db = require('../db');
       const verifica = await db.query('SELECT id FROM feiras WHERE id = $1 AND organizador_id = $2', [feira_id, organizador_id]);
       if (verifica.rows.length === 0) return res.status(403).json({ error: 'Acesso negado' });
       await db.query('DELETE FROM participacoes WHERE feira_id = $1 AND feirante_id = $2', [feira_id, feirante_id]);
       res.json({ message: 'Removido com sucesso' });
-    } catch(e) { res.status(500).json({ error: 'Erro' }); }
+    } catch (e) {
+      res.status(500).json({ error: 'Erro' });
+    }
   },
 
   // Feirante sai da feira
@@ -151,10 +236,11 @@ const convitesController = {
     const { feira_id } = req.params;
     const feirante_id = req.user.id;
     try {
-      const db = require('../db');
       await db.query('DELETE FROM participacoes WHERE feira_id = $1 AND feirante_id = $2', [feira_id, feirante_id]);
       res.json({ message: 'Você saiu da feira' });
-    } catch(e) { res.status(500).json({ error: 'Erro' }); }
+    } catch (e) {
+      res.status(500).json({ error: 'Erro' });
+    }
   }
 };
 

@@ -12,6 +12,7 @@ import { EditarFeira } from './pages/EditarFeira';
 import { NovoProduto } from './pages/NovoProduto';
 import { EditarProduto } from './pages/EditarProduto';
 import { ProductDetail } from './pages/ProductDetail';
+import { ConviteLink } from './pages/ConviteLink';
 import api from './api';
 
 function PrivateRoute({ children, role }: { children: React.ReactNode, role?: string }) {
@@ -53,6 +54,7 @@ export default function App() {
         <Route path="/produtos" element={<Listing productsOnly />} />
         <Route path="/feira/:id" element={<FairDetail />} />
         <Route path="/produto/:id" element={<ProductDetail />} />
+        <Route path="/convite/:token" element={<ConviteLink />} />
         <Route path="/login" element={<Auth />} />
         
         <Route path="/nova-senha" element={

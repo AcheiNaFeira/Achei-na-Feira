@@ -73,6 +73,7 @@ const initDb = async () => {
         hora_fim TIME NOT NULL,
         descricao TEXT,
         imagem_url TEXT,
+        convite_token VARCHAR(64) UNIQUE,
         organizador_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -82,6 +83,7 @@ const initDb = async () => {
       await db.query(`ALTER TABLE feiras ADD COLUMN IF NOT EXISTS imagem_url TEXT;`);
       await db.query(`ALTER TABLE feiras ADD COLUMN IF NOT EXISTS endereco_completo TEXT;`);
       await db.query(`ALTER TABLE feiras ADD COLUMN IF NOT EXISTS likes INTEGER DEFAULT 0;`);
+      await db.query(`ALTER TABLE feiras ADD COLUMN IF NOT EXISTS convite_token VARCHAR(64) UNIQUE;`);
     } catch (e) {}
 
     await db.query(`

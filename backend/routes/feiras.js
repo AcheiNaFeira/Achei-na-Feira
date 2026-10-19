@@ -16,6 +16,7 @@ router.get('/:id/produtos', feirasController.listarProdutos);
 // Rotas protegidas (apenas organizadores)
 router.post('/', authMiddleware, roleMiddleware(['organizador']), upload.single('imagem'), feirasController.criar);
 router.post('/:id/convidar', authMiddleware, roleMiddleware(['organizador']), convitesController.convidar);
+router.post('/:id/link-convite', authMiddleware, roleMiddleware(['organizador']), convitesController.gerarLinkConvite);
 router.put('/:id', authMiddleware, roleMiddleware(['organizador']), upload.single('imagem'), feirasController.editar);
 router.delete('/:id', authMiddleware, roleMiddleware(['organizador']), feirasController.deletar);
 
