@@ -43,7 +43,7 @@ const produtosController = {
       
       // Buscar as feiras confirmadas em que o feirante deste produto atua
       const feirasResult = await db.query(
-        `SELECT f.id, f.nome, f.local, f.endereco_completo 
+        `SELECT f.id, f.nome, f.local, f.endereco_completo, f.imagem_url 
          FROM feiras f 
          JOIN participacoes part ON f.id = part.feira_id 
          WHERE part.feirante_id = $1 AND part.status = 'aceito'`,

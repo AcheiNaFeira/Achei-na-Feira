@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Bell, CalendarDays, ChevronDown, CircleUserRound, Heart, Home, Leaf, ListFilter, MapPin, Menu, Pencil, Plus, Search, Settings, Store, X } from 'lucide-react';
+import { ArrowRight, CalendarDays, CircleUserRound, Heart, Home, Leaf, MapPin, Menu, Plus, Search, X } from 'lucide-react';
+import api, { getImageUrl, formatDateBR } from '../api';
 
 export function Logo() { 
   const navigate = useNavigate(); 
@@ -48,8 +49,6 @@ export function SearchBar({ onSearch, initialValue = '' }: { onSearch?: (value: 
     </div>
   );
 }
-
-import { getImageUrl, formatDateBR } from '../api';
 
 export function MarketCard({ market, onClick }: { market: any; onClick: () => void }) { 
   return (
@@ -189,4 +188,3 @@ export function DashboardNav({ role }: { role: 'feirante' | 'organizador' }) {
     </aside>
   );
 }
-import api from '../api';

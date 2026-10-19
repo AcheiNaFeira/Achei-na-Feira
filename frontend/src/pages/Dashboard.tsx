@@ -91,6 +91,17 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
     }
   };
 
+  const deletarProduto = async (id: number) => {
+    if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+    try {
+      await api.delete(`/produtos/${id}`);
+      setItems(items.filter(p => p.id !== id));
+      alert('Produto excluído com sucesso!');
+    } catch (err) {
+      alert('Erro ao excluir produto.');
+    }
+  };
+
   const abrirParticipantes = async (feira: any) => {
     try {
       const res = await api.get(`/feiras/${feira.id}/feirantes`);
@@ -156,7 +167,11 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
                   </div>
                   <div>
                     <b>{item.nome}</b>
-                    {organizer && <p style={{fontSize: 12, color: '#64748b', margin: 0}}>{formatDateBR(item.data)}</p>}
+                    {organizer ? (
+                      <p style={{fontSize: 12, color: '#64748b', margin: 0}}>{formatDateBR(item.data)}</p>
+                    ) : (
+                      <p style={{fontSize: 12, color: '#64748b', margin: 0}}>R$ {item.preco} • {item.categoria}</p>
+                    )}
                   </div>
                 </div>
                 
@@ -175,9 +190,14 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
                     </>
                   )}
                   {!organizer && (
-                    <Button variant="ghost" onClick={() => alert('Edição de produtos estará disponível na próxima versão.')} title="Editar Produto">
-                      <Pencil size={16} />
-                    </Button>
+                    <>
+                      <Button variant="ghost" onClick={() => navigate(`/produto/editar/${item.id}`)} title="Editar Produto">
+                        <Pencil size={16} />
+                      </Button>
+                      <Button variant="ghost" onClick={() => deletarProduto(item.id)} style={{color: '#ef4444'}} title="Excluir Produto">
+                        <Trash size={16} />
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>

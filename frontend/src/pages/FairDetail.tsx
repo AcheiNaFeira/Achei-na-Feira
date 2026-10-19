@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Filter, Heart, MapPin, Ticket } from 'lucide-react';
+import { ArrowLeft, Filter, Heart, MapPin } from 'lucide-react';
 import { Button, ProductCard, Shell } from '../components/Shared';
-import api from '../api';
-
-import { getImageUrl, formatDateBR } from '../api';
+import api, { getImageUrl, formatDateBR } from '../api';
 
 export function FairDetail() { 
   const { id } = useParams();

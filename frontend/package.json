@@ -1,8 +1,7 @@
 {
-  "name": "my-project",
+  "name": "achei-na-feira-frontend",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@12.3.4",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { HomePage } from './pages/Home';
 import { Listing } from './pages/Listing';
@@ -9,7 +10,9 @@ import { Admin } from './pages/Admin';
 import { NovaFeira } from './pages/NovaFeira';
 import { EditarFeira } from './pages/EditarFeira';
 import { NovoProduto } from './pages/NovoProduto';
+import { EditarProduto } from './pages/EditarProduto';
 import { ProductDetail } from './pages/ProductDetail';
+import api from './api';
 
 function PrivateRoute({ children, role }: { children: React.ReactNode, role?: string }) {
   const userString = localStorage.getItem('user');
@@ -29,9 +32,6 @@ function PrivateRoute({ children, role }: { children: React.ReactNode, role?: st
 
   return <>{children}</>;
 }
-
-import { useEffect } from 'react';
-import api from './api';
 
 export default function App() {
   useEffect(() => {
@@ -69,6 +69,11 @@ export default function App() {
         <Route path="/novo-produto" element={
           <PrivateRoute role="feirante">
             <NovoProduto />
+          </PrivateRoute>
+        } />
+        <Route path="/produto/editar/:id" element={
+          <PrivateRoute role="feirante">
+            <EditarProduto />
           </PrivateRoute>
         } />
         

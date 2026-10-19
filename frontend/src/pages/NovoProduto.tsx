@@ -72,7 +72,7 @@ export function NovoProduto() {
                 <option>Orgânicos</option>
                 <option>Artesanato</option>
                 <option>Flores</option>
-                <option>Alimentos Prontos</option>
+                <option>Alimentos</option>
                 <option>Laticínios</option>
                 <option>Colecionáveis</option>
                 <option>Roupas</option>
