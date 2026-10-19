@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Check, Copy, Link2, LogOut, MessageCircle, Pencil, Plus, RefreshCw, Search, Trash, Users, X } from 'lucide-react';
+import { Bell, Check, Copy, Link2, LogOut, MessageCircle, Pencil, Plus, RefreshCw, Save, Search, Trash, Users, X } from 'lucide-react';
 import { Button, DashboardNav } from '../components/Shared';
 import api, { getImageUrl, formatDateBR } from '../api';
 
@@ -10,6 +10,17 @@ const normalizeText = (str: string) =>
 export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organizador' }) {
   const navigate = useNavigate();
   const organizer = role === 'organizador';
+  const [activeView, setActiveView] = useState<'overview' | 'profile'>('overview');
+  const [notificacoesOpen, setNotificacoesOpen] = useState(false);
+
+  const [currentUser, setCurrentUser] = useState<any>(() => JSON.parse(localStorage.getItem('user') || '{}'));
+  const [perfilForm, setPerfilForm] = useState({
+    nome: currentUser.nome || '',
+    email: currentUser.email || '',
+    whatsapp: currentUser.whatsapp || '',
+    novaSenha: ''
+  });
+
   const [items, setItems] = useState<any[]>([]);
   const [convites, setConvites] = useState<any[]>([]);
   const [feirantes, setFeirantes] = useState<any[]>([]);
@@ -25,8 +36,6 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
   const [verFeirantes, setVerFeirantes] = useState<any>(null);
   const [participantes, setParticipantes] = useState<any[]>([]);
 
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-
   const today = new Date();
   today.setHours(0,0,0,0);
 
@@ -38,6 +47,8 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
 
   const itemsAtivos = organizer ? items.filter(i => !isPast(i.data)) : items;
   const itemsPassados = organizer ? items.filter(i => isPast(i.data)) : [];
+
+  const totalNotificacoes = (organizer ? 0 : convites.length) + (!currentUser.whatsapp ? 1 : 0);
 
   const feirantesFiltrados = useMemo(() => {
     const termo = normalizeText(buscaFeirante.trim());
@@ -56,16 +67,45 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
 
   useEffect(() => {
     fetchData();
-  }, [role, organizer, user.id]);
+    api.get('/auth/me')
+      .then(res => {
+        if (res.data?.user) {
+          const u = res.data.user;
+          setCurrentUser(u);
+          localStorage.setItem('user', JSON.stringify(u));
+          setPerfilForm(prev => ({
+            ...prev,
+            nome: u.nome || '',
+            email: u.email || '',
+            whatsapp: u.whatsapp || ''
+          }));
+        }
+      })
+      .catch(() => {});
+  }, [role, organizer, currentUser.id]);
 
   const fetchData = () => {
     if (organizer) {
       api.get('/feiras/minhas').then(res => setItems(res.data)).catch(console.error);
       api.get('/users/feirantes').then(res => setFeirantes(res.data)).catch(console.error);
     } else {
-      api.get('/produtos').then(res => setItems(res.data.filter((p: any) => p.feirante_id === user.id))).catch(console.error);
+      api.get('/produtos').then(res => setItems(res.data.filter((p: any) => p.feirante_id === currentUser.id))).catch(console.error);
       api.get('/convites').then(res => setConvites(res.data)).catch(console.error);
       api.get('/users/minhas-feiras').then(res => setMinhasFeiras(res.data)).catch(console.error);
+    }
+  };
+
+  const salvarPerfil = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await api.put('/users/perfil', perfilForm);
+      const updatedUser = res.data.user;
+      setCurrentUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setPerfilForm(prev => ({ ...prev, novaSenha: '' }));
+      alert('Perfil atualizado com sucesso!');
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Erro ao atualizar perfil.');
     }
   };
 
@@ -214,16 +254,156 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
 
   return (
     <main className="dashboard">
-      <DashboardNav role={role} />
+      <DashboardNav role={role} activeView={activeView} onChangeView={setActiveView} />
       <section className="dashboard-content">
-        <div className="dashboard-top">
+        <div className="dashboard-top" style={{ position: 'relative' }}>
           <div>
-            <span className="kicker">BOM DIA, {user.nome?.toUpperCase()}</span>
-            <h1>{organizer ? 'Vamos movimentar a cidade.' : 'Seu catálogo está vivo.'}</h1>
+            <span className="kicker">BOM DIA, {currentUser.nome?.toUpperCase()}</span>
+            <h1>{activeView === 'profile' ? 'Seus dados pessoais.' : (organizer ? 'Vamos movimentar a cidade.' : 'Seu catálogo está vivo.')}</h1>
           </div>
-          <button className="icon-button" onClick={() => alert('Nenhuma notificação nova no momento.')}><Bell size={19} /></button>
+          <div style={{ position: 'relative' }}>
+            <button
+              className="icon-button"
+              onClick={() => setNotificacoesOpen(!notificacoesOpen)}
+              title="Notificações"
+              style={{ position: 'relative' }}
+            >
+              <Bell size={19} />
+              {totalNotificacoes > 0 && (
+                <span style={{
+                  position: 'absolute', top: -4, right: -4, background: '#ef4444', color: '#fff',
+                  fontSize: 10, fontWeight: 700, width: 18, height: 18, borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  {totalNotificacoes}
+                </span>
+              )}
+            </button>
+
+            {notificacoesOpen && (
+              <div className="panel" style={{
+                position: 'absolute', top: 48, right: 0, width: 320, zIndex: 50,
+                boxShadow: '0 10px 25px rgba(15, 23, 42, 0.15)', border: '1px solid #e2e8f0', padding: 16
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <strong style={{ fontSize: 14, color: '#0f172a' }}>Notificações</strong>
+                  <button
+                    type="button"
+                    onClick={() => setNotificacoesOpen(false)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                {totalNotificacoes === 0 ? (
+                  <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>
+                    Tudo em dia! Nenhuma pendência no momento.
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {!currentUser.whatsapp && (
+                      <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', padding: 10, borderRadius: 8 }}>
+                        <p style={{ margin: '0 0 8px', fontSize: 12, color: '#9a3412' }}>
+                          Você ainda não cadastrou seu <b>WhatsApp</b>. Adicione no seu perfil para facilitar o contato!
+                        </p>
+                        <Button
+                          variant="outline"
+                          onClick={() => { setActiveView('profile'); setNotificacoesOpen(false); }}
+                          style={{ padding: '4px 10px', fontSize: 12 }}
+                        >
+                          Completar Perfil
+                        </Button>
+                      </div>
+                    )}
+
+                    {!organizer && convites.map((c: any) => (
+                      <div key={c.convite_id} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: 10, borderRadius: 8 }}>
+                        <p style={{ margin: '0 0 8px', fontSize: 12, color: '#334155' }}>
+                          Novo convite para participar da feira <b>{c.feira_nome}</b> ({formatDateBR(c.data)}).
+                        </p>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <Button variant="primary" onClick={() => aceitarConvite(c.convite_id)} style={{ flex: 1, padding: '4px 0', fontSize: 12 }}>
+                            Aceitar
+                          </Button>
+                          <Button variant="outline" onClick={() => recusarConvite(c.convite_id)} style={{ flex: 1, padding: '4px 0', fontSize: 12 }}>
+                            Recusar
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
+        {activeView === 'profile' ? (
+          <div className="panel" style={{ maxWidth: 560 }}>
+            <div className="panel-head">
+              <div>
+                <span className="kicker">CONTA & CONTATO</span>
+                <h2>Meu Perfil</h2>
+              </div>
+            </div>
+            <form onSubmit={salvarPerfil} style={{ display: 'flex', flexDirection: 'column', gap: 15, marginTop: 15 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>
+                Seu Nome
+                <input
+                  type="text"
+                  required
+                  value={perfilForm.nome}
+                  onChange={e => setPerfilForm({ ...perfilForm, nome: e.target.value })}
+                  style={{ display: 'block', width: '100%', padding: '10px', marginTop: 5, border: '1px solid #cbd5e1', borderRadius: 6 }}
+                />
+              </label>
+
+              <label style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>
+                E-mail
+                <input
+                  type="email"
+                  required
+                  value={perfilForm.email}
+                  onChange={e => setPerfilForm({ ...perfilForm, email: e.target.value })}
+                  style={{ display: 'block', width: '100%', padding: '10px', marginTop: 5, border: '1px solid #cbd5e1', borderRadius: 6 }}
+                />
+              </label>
+
+              <label style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>
+                WhatsApp {role === 'feirante' && <span style={{ color: '#64748b', fontWeight: 400 }}>(Visível para clientes nos seus produtos)</span>}
+                <input
+                  type="text"
+                  placeholder="(47) 99999-9999"
+                  value={perfilForm.whatsapp}
+                  onChange={e => setPerfilForm({ ...perfilForm, whatsapp: e.target.value })}
+                  style={{ display: 'block', width: '100%', padding: '10px', marginTop: 5, border: '1px solid #cbd5e1', borderRadius: 6 }}
+                />
+              </label>
+
+              <label style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>
+                Nova Senha <span style={{ color: '#64748b', fontWeight: 400 }}>(Deixe em branco para manter a atual)</span>
+                <input
+                  type="password"
+                  placeholder="Mínimo de 6 caracteres"
+                  value={perfilForm.novaSenha}
+                  onChange={e => setPerfilForm({ ...perfilForm, novaSenha: e.target.value })}
+                  style={{ display: 'block', width: '100%', padding: '10px', marginTop: 5, border: '1px solid #cbd5e1', borderRadius: 6 }}
+                />
+              </label>
+
+              <div style={{ display: 'flex', gap: 10, marginTop: 5 }}>
+                <Button type="submit">
+                  <Save size={16} /> Salvar Alterações
+                </Button>
+                <Button variant="outline" onClick={() => setActiveView('overview')}>
+                  Voltar ao Painel
+                </Button>
+              </div>
+            </form>
+          </div>
+        ) : (
+        <>
         <div className="dashboard-columns">
           <div className="panel" style={{gridColumn: organizer ? 'span 2' : 'span 1'}}>
             <div className="panel-head">
@@ -542,6 +722,8 @@ export function Dashboard({ role = 'feirante' }: { role?: 'feirante' | 'organiza
         <div className="quick-actions">
           <Button onClick={() => navigate(organizer ? '/nova-feira' : '/novo-produto')}><Plus size={17} /> {organizer ? 'Criar nova feira' : 'Adicionar produto'}</Button>
         </div>
+        </>
+        )}
       </section>
     </main>
   );

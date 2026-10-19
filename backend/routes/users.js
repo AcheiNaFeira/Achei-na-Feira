@@ -6,5 +6,6 @@ const roleMiddleware = require('../middlewares/roleMiddleware');
 
 router.get('/feirantes', authMiddleware, roleMiddleware(['organizador', 'admin']), usersController.listarFeirantes);
 router.get('/minhas-feiras', authMiddleware, roleMiddleware(['feirante']), usersController.listarMinhasFeiras);
+router.put('/perfil', authMiddleware, usersController.atualizarPerfil);
 
 module.exports = router;

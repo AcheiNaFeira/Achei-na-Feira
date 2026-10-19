@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Filter, Heart, MapPin } from 'lucide-react';
+import { ArrowLeft, Filter, Heart, MapPin, Store } from 'lucide-react';
 import { Button, ProductCard, Shell } from '../components/Shared';
 import api, { getImageUrl, formatDateBR } from '../api';
 
@@ -9,6 +9,8 @@ export function FairDetail() {
   const navigate = useNavigate();
   const [feira, setFeira] = useState<any>(null);
   const [produtos, setProdutos] = useState<any[]>([]);
+  const [feirantesConfirmados, setFeirantesConfirmados] = useState<any[]>([]);
+  const [feiranteFiltro, setFeiranteFiltro] = useState<number | null>(null);
 
   // State local para botões da feira
   const [salvo, setSalvo] = useState(() => {
@@ -18,10 +20,11 @@ export function FairDetail() {
   useEffect(() => {
     api.get(`/feiras/${id}`).then(res => setFeira(res.data)).catch(console.error);
     api.get(`/feiras/${id}/produtos`).then(res => setProdutos(res.data)).catch(console.error);
+    api.get(`/feiras/${id}/feirantes`).then(res => setFeirantesConfirmados(res.data)).catch(console.error);
   }, [id]);
 
   const openMaps = () => {
-    const query = feira.endereco_completo || `${feira.local} ${feira.cidade}`;
+    const query = feira.endereco_completo || `${feira.local} ${feira.cidade || ''}`;
     window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, '_blank');
   };
 
@@ -44,6 +47,10 @@ export function FairDetail() {
   };
 
   if (!feira) return <Shell><div style={{padding: 40}}>Carregando...</div></Shell>;
+
+  const produtosExibidos = feiranteFiltro
+    ? produtos.filter(p => p.feirante_id === feiranteFiltro)
+    : produtos;
 
   return (
     <Shell>
@@ -80,19 +87,67 @@ export function FairDetail() {
             </div>
           </div>
         </div>
+
+        {/* Seção de Bancas / Feirantes Confirmados */}
+        {feirantesConfirmados.length > 0 && (
+          <div className="detail-section" style={{ marginBottom: 30 }}>
+            <div className="section-heading">
+              <div>
+                <span className="kicker">{feirantesConfirmados.length} PARTICIPANTES</span>
+                <h2>Bancas & Produtores Confirmados</h2>
+              </div>
+              {feiranteFiltro && (
+                <Button variant="outline" onClick={() => setFeiranteFiltro(null)}>
+                  Mostrar todos os produtos
+                </Button>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 15 }}>
+              {feirantesConfirmados.map((f: any) => {
+                const ativo = feiranteFiltro === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setFeiranteFiltro(ativo ? null : f.id)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
+                      borderRadius: 10, cursor: 'pointer', textAlign: 'left',
+                      background: ativo ? '#fff7ed' : '#f8fafc',
+                      border: ativo ? '2px solid var(--orange)' : '1px solid #e2e8f0'
+                    }}
+                  >
+                    <div style={{
+                      width: 34, height: 34, borderRadius: '50%', background: '#f97316', color: '#fff',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700
+                    }}>
+                      <Store size={16} />
+                    </div>
+                    <div>
+                      <strong style={{ display: 'block', fontSize: 14, color: '#0f172a' }}>{f.nome}</strong>
+                      <small style={{ color: '#64748b', fontSize: 12 }}>
+                        {f.total_produtos ?? 0} produto(s)
+                      </small>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
         
         <div className="detail-section" id="produtos-section">
           <div className="section-heading">
-            <div><span className="kicker">{produtos.length} PRODUTOS</span><h2>O que você encontra</h2></div>
+            <div><span className="kicker">{produtosExibidos.length} PRODUTOS</span><h2>O que você encontra</h2></div>
             <Button variant="soft" onClick={() => document.getElementById('produtos-section')?.scrollIntoView({behavior: 'smooth'})}>
               <Filter size={16} /> Ver Catálogo
             </Button>
           </div>
-          {produtos.length === 0 ? (
+          {produtosExibidos.length === 0 ? (
             <p>Nenhum produto cadastrado pelos feirantes confirmados nesta feira ainda.</p>
           ) : (
             <div className="product-grid">
-              {produtos.map(p => (
+              {produtosExibidos.map(p => (
                  <ProductCard key={p.id} product={p} />
               ))}
             </div>

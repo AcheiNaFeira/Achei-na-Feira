@@ -37,7 +37,6 @@ app.post('/api/visita', async (req, res) => {
 const initDb = async () => {
   try {
     await db.query('CREATE TABLE IF NOT EXISTS analytics_daily (data DATE PRIMARY KEY, views INTEGER DEFAULT 0)');
-    await db.query('CREATE TABLE IF NOT EXISTS likes_log (id SERIAL PRIMARY KEY, tipo VARCHAR(20), item_id INTEGER, ip VARCHAR(45), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)');
 
     await db.query(`
       CREATE TABLE IF NOT EXISTS users (

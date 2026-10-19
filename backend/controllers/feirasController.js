@@ -3,14 +3,17 @@ const db = require('../db');
 const feirasController = {
   // GET /api/feiras
   async listar(req, res) {
-    const { cidade, data } = req.query;
+    const { cidade, data, busca } = req.query;
     let query = 'SELECT * FROM feiras WHERE 1=1';
     const params = [];
     
-    // Filtros de exemplo, podem ser expandidos
     if (cidade) {
       params.push(`%${cidade}%`);
-      query += ` AND local ILIKE $${params.length}`;
+      query += ` AND (local ILIKE $${params.length} OR COALESCE(endereco_completo, '') ILIKE $${params.length})`;
+    }
+    if (busca) {
+      params.push(`%${busca}%`);
+      query += ` AND (nome ILIKE $${params.length} OR local ILIKE $${params.length} OR COALESCE(descricao, '') ILIKE $${params.length})`;
     }
     if (data) {
       params.push(data);

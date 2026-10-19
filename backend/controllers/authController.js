@@ -23,7 +23,7 @@ const authController = {
       const hashSenha = await bcrypt.hash(senha, salt);
 
       const result = await db.query(
-        'INSERT INTO users (nome, email, senha, tipo, status_aprovacao, whatsapp) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, nome, email, tipo, status_aprovacao',
+        'INSERT INTO users (nome, email, senha, tipo, status_aprovacao, whatsapp) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, nome, email, tipo, status_aprovacao, whatsapp',
         [nome, email, hashSenha, tipo, status_aprovacao, whatsapp]
       );
 
@@ -36,34 +36,6 @@ const authController = {
         return res.status(400).json({ error: 'E-mail já cadastrado.' });
       }
       console.error('Erro no register:', err);
-      res.status(500).json({ error: 'Erro no servidor' });
-    }
-  },
-  async criarFeirante(req, res) {
-    const { nome, email } = req.body;
-    
-    // Gera uma senha provisória padrão
-    const senhaProvisoria = 'Mudar123';
-
-    try {
-      const salt = await bcrypt.genSalt(10);
-      const hashSenha = await bcrypt.hash(senhaProvisoria, salt);
-
-      const result = await db.query(
-        'INSERT INTO users (nome, email, senha, tipo, precisa_trocar_senha) VALUES ($1, $2, $3, $4, $5) RETURNING id, nome, email, tipo, precisa_trocar_senha',
-        [nome, email, hashSenha, 'feirante', true]
-      );
-
-      res.status(201).json({ 
-        message: 'Feirante criado!', 
-        user: result.rows[0],
-        senha_provisoria: senhaProvisoria 
-      });
-    } catch (err) {
-      if (err.code === '23505') {
-        return res.status(400).json({ error: 'E-mail já cadastrado.' });
-      }
-      console.error('Erro no criarFeirante:', err);
       res.status(500).json({ error: 'Erro no servidor' });
     }
   },
@@ -105,6 +77,7 @@ const authController = {
           nome: user.nome,
           email: user.email,
           tipo: user.tipo,
+          whatsapp: user.whatsapp || '',
           precisa_trocar_senha: user.precisa_trocar_senha
         }
       });

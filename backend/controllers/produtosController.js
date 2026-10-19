@@ -3,17 +3,37 @@ const db = require('../db');
 const produtosController = {
   // GET /api/produtos
   async listar(req, res) {
-    const { categoria, busca } = req.query;
+    const { categoria, busca, cidade, feira_id } = req.query;
     let query = 'SELECT p.*, u.nome as feirante_nome, u.whatsapp as feirante_whatsapp FROM produtos p JOIN users u ON p.feirante_id = u.id WHERE 1=1';
     const params = [];
     
     if (categoria) {
-      params.push(categoria);
-      query += ` AND p.categoria = $${params.length}`;
+      if (categoria === 'Alimentos') {
+        query += ` AND p.categoria IN ('Alimentos', 'Alimentos Prontos')`;
+      } else {
+        params.push(categoria);
+        query += ` AND p.categoria = $${params.length}`;
+      }
     }
     if (busca) {
       params.push(`%${busca}%`);
-      query += ` AND (p.nome ILIKE $${params.length} OR p.descricao ILIKE $${params.length})`;
+      query += ` AND (p.nome ILIKE $${params.length} OR COALESCE(p.descricao, '') ILIKE $${params.length} OR u.nome ILIKE $${params.length})`;
+    }
+    if (feira_id) {
+      params.push(feira_id);
+      query += ` AND EXISTS (
+        SELECT 1 FROM participacoes part
+        WHERE part.feirante_id = p.feirante_id AND part.feira_id = $${params.length} AND part.status = 'aceito'
+      )`;
+    }
+    if (cidade) {
+      params.push(`%${cidade}%`);
+      query += ` AND EXISTS (
+        SELECT 1 FROM participacoes part
+        JOIN feiras f ON f.id = part.feira_id
+        WHERE part.feirante_id = p.feirante_id AND part.status = 'aceito'
+          AND (f.local ILIKE $${params.length} OR COALESCE(f.endereco_completo, '') ILIKE $${params.length})
+      )`;
     }
 
     query += ' ORDER BY p.created_at DESC';

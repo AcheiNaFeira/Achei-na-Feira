@@ -1,10 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { SearchBar, Shell, MarketCard, ProductCard } from '../components/Shared';
 import api from '../api';
 
+const extractCityFromLocal = (localStr: string): string | null => {
+  if (!localStr) return null;
+  const dashSlashMatch = localStr.match(/-\s*([^/,-]+)\s*\//);
+  if (dashSlashMatch?.[1]) return dashSlashMatch[1].trim();
+  const slashMatch = localStr.match(/^([^/,-]+)\s*\//);
+  if (slashMatch?.[1]) return slashMatch[1].trim();
+  return null;
+};
+
 export function Listing({ productsOnly = false }: { productsOnly?: boolean }) { 
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState<any[]>([]);
+  const [feirasAtivas, setFeirasAtivas] = useState<any[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -12,6 +22,20 @@ export function Listing({ productsOnly = false }: { productsOnly?: boolean }) {
   const busca = searchParams.get('busca') || '';
   const categoria = searchParams.get('categoria') || '';
   const cidade = searchParams.get('cidade') || '';
+  const feiraId = searchParams.get('feira_id') || '';
+
+  useEffect(() => {
+    api.get('/feiras').then(res => setFeirasAtivas(res.data || [])).catch(() => {});
+  }, []);
+
+  const cidadesDisponiveis = useMemo(() => {
+    const base = new Set<string>(['Joinville', 'Araquari', 'Garuva']);
+    feirasAtivas.forEach((f: any) => {
+      const c = extractCityFromLocal(f.local) || extractCityFromLocal(f.endereco_completo);
+      if (c) base.add(c);
+    });
+    return Array.from(base).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }, [feirasAtivas]);
 
   // Efeito disparado sempre que os filtros (URL) mudam
   // RF07 e RNF02: Motor de Busca Inteligente / Sistema de Filtros
@@ -20,11 +44,11 @@ export function Listing({ productsOnly = false }: { productsOnly?: boolean }) {
       try {
         const endpoint = productsOnly ? '/produtos' : '/feiras';
         
-        // Passa os parâmetros de busca para o backend
         const params = new URLSearchParams();
-        if (busca) params.append(productsOnly ? 'busca' : 'cidade', busca); 
+        if (busca) params.append('busca', busca);
         if (categoria) params.append('categoria', categoria);
         if (cidade) params.append('cidade', cidade);
+        if (productsOnly && feiraId) params.append('feira_id', feiraId);
 
         const res = await api.get(`${endpoint}?${params.toString()}`);
         setItems(res.data);
@@ -33,7 +57,7 @@ export function Listing({ productsOnly = false }: { productsOnly?: boolean }) {
       }
     };
     fetchItems();
-  }, [productsOnly, busca, categoria, cidade]);
+  }, [productsOnly, busca, categoria, cidade, feiraId]);
 
   const setFilter = (key: string, value: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -42,10 +66,11 @@ export function Listing({ productsOnly = false }: { productsOnly?: boolean }) {
     setSearchParams(newParams);
   };
 
-  // We handle frontend filter for name if backend doesn't filter by name for feiras
-  const filtered = items.filter((item: any) => 
-    !productsOnly ? item.nome.toLowerCase().includes(busca.toLowerCase()) : true
-  );
+  const limparFiltros = () => {
+    setSearchParams(new URLSearchParams());
+  };
+
+  const temFiltroAtivo = Boolean(busca || categoria || cidade || feiraId);
 
   return (
     <Shell>
@@ -57,48 +82,70 @@ export function Listing({ productsOnly = false }: { productsOnly?: boolean }) {
         <SearchBar onSearch={(val) => setFilter('busca', val)} initialValue={busca} />
       </section>
       
-      <div className="filter-row" style={{display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10}}>
-        {!productsOnly && (
-          <select 
-            className="button button-soft" 
-            value={cidade} 
-            onChange={e => setFilter('cidade', e.target.value)}
-            style={{padding: '8px 12px', border: 'none', background: '#dbe4da', borderRadius: 8, cursor: 'pointer', outline: 'none'}}
-          >
-            <option value="">Todas as Cidades</option>
-            <option value="Joinville">Joinville</option>
-            <option value="Araquari">Araquari</option>
-            <option value="Garuva">Garuva</option>
-          </select>
-        )}
+      <div className="filter-row" style={{display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, alignItems: 'center', flexWrap: 'wrap'}}>
+        <select 
+          className="button button-soft" 
+          value={cidade} 
+          onChange={e => setFilter('cidade', e.target.value)}
+          style={{padding: '8px 12px', border: 'none', background: '#dbe4da', borderRadius: 8, cursor: 'pointer', outline: 'none'}}
+        >
+          <option value="">Todas as Cidades</option>
+          {cidadesDisponiveis.map(c => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
         
         {productsOnly && (
-          <select 
-            className="button button-outline" 
-            value={categoria} 
-            onChange={e => setFilter('categoria', e.target.value)}
-            style={{padding: '8px 12px', borderRadius: 8, cursor: 'pointer', outline: 'none'}}
+          <>
+            <select 
+              className="button button-outline" 
+              value={categoria} 
+              onChange={e => setFilter('categoria', e.target.value)}
+              style={{padding: '8px 12px', borderRadius: 8, cursor: 'pointer', outline: 'none'}}
+            >
+              <option value="">Todas as Categorias</option>
+              <option value="Frutas & Verduras">Frutas & Verduras</option>
+              <option value="Orgânicos">Orgânicos</option>
+              <option value="Artesanato">Artesanato</option>
+              <option value="Flores">Flores</option>
+              <option value="Alimentos">Alimentos</option>
+              <option value="Laticínios">Laticínios</option>
+              <option value="Colecionáveis">Colecionáveis</option>
+              <option value="Roupas">Roupas</option>
+            </select>
+
+            <select 
+              className="button button-outline" 
+              value={feiraId} 
+              onChange={e => setFilter('feira_id', e.target.value)}
+              style={{padding: '8px 12px', borderRadius: 8, cursor: 'pointer', outline: 'none'}}
+            >
+              <option value="">Todas as Feiras</option>
+              {feirasAtivas.map((f: any) => (
+                <option key={f.id} value={f.id}>{f.nome}</option>
+              ))}
+            </select>
+          </>
+        )}
+
+        {temFiltroAtivo && (
+          <button
+            type="button"
+            onClick={limparFiltros}
+            style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 13, cursor: 'pointer', textDecoration: 'underline', padding: '4px 8px' }}
           >
-            <option value="">Todas as Categorias</option>
-            <option value="Frutas & Verduras">Frutas & Verduras</option>
-            <option value="Orgânicos">Orgânicos</option>
-            <option value="Artesanato">Artesanato</option>
-            <option value="Flores">Flores</option>
-            <option value="Alimentos">Alimentos</option>
-            <option value="Laticínios">Laticínios</option>
-            <option value="Colecionáveis">Colecionáveis</option>
-            <option value="Roupas">Roupas</option>
-          </select>
+            Limpar filtros
+          </button>
         )}
       </div>
 
-      {filtered.length === 0 ? (
+      {items.length === 0 ? (
         <div style={{padding: '40px 0', textAlign: 'center', color: '#666'}}>
           Nenhum resultado encontrado para estes filtros.
         </div>
       ) : (
         <div className={`${productsOnly ? 'product-grid' : 'market-grid'} listing-grid`}>
-          {filtered.map((item: any) => 
+          {items.map((item: any) => 
             productsOnly 
               ? <ProductCard key={item.id} product={item} /> 
               : <MarketCard key={item.id} market={item} onClick={() => navigate(`/feira/${item.id}`)} />

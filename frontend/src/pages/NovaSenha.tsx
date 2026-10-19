@@ -13,8 +13,7 @@ export function NovaSenha() {
     e.preventDefault();
     setError('');
     try {
-      const res = await api.put('/auth/mudar-senha', { novaSenha });
-      localStorage.setItem('token', res.data.token);
+      await api.put('/auth/mudar-senha', { novaSenha });
       
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       user.precisa_trocar_senha = false;

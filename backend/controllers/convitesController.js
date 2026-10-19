@@ -203,7 +203,8 @@ const convitesController = {
 
     try {
       const result = await db.query(
-        `SELECT u.id, u.nome, u.email, p.status, p.created_at as participacao_data
+        `SELECT u.id, u.nome, u.email, u.whatsapp, p.status, p.created_at as participacao_data,
+                (SELECT COUNT(*)::int FROM produtos prod WHERE prod.feirante_id = u.id) as total_produtos
          FROM participacoes p
          JOIN users u ON p.feirante_id = u.id
          WHERE p.feira_id = $1 AND p.status = 'aceito'

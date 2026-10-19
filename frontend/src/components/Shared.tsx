@@ -156,7 +156,15 @@ export function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function DashboardNav({ role }: { role: 'feirante' | 'organizador' }) { 
+export function DashboardNav({
+  role,
+  activeView = 'overview',
+  onChangeView
+}: {
+  role: 'feirante' | 'organizador';
+  activeView?: 'overview' | 'profile';
+  onChangeView?: (view: 'overview' | 'profile') => void;
+}) { 
   const navigate = useNavigate();
   const logout = async () => {
     try {
@@ -171,7 +179,7 @@ export function DashboardNav({ role }: { role: 'feirante' | 'organizador' }) {
   return (
     <aside className="dashboard-nav">
       <Logo />
-      <div className="user-chip">
+      <div className="user-chip" onClick={() => onChangeView?.('profile')} style={{ cursor: 'pointer' }} title="Editar Perfil">
         <div className="avatar">{user.nome?.charAt(0) || 'A'}</div>
         <div>
           <b>{user.nome || 'Usuário'}</b>
@@ -179,9 +187,23 @@ export function DashboardNav({ role }: { role: 'feirante' | 'organizador' }) {
         </div>
       </div>
       <nav>
-        <button className="active" onClick={() => navigate(`/${role}`)}><Home size={17} /> Visão geral</button>
+        <button
+          className={activeView === 'overview' ? 'active' : ''}
+          onClick={() => {
+            onChangeView?.('overview');
+            navigate(`/${role}`);
+          }}
+        >
+          <Home size={17} /> Visão geral
+        </button>
         <button onClick={() => navigate(role === 'feirante' ? '/novo-produto' : '/nova-feira')}>
           <Plus size={17} /> {role === 'feirante' ? 'Novo produto' : 'Nova feira'}
+        </button>
+        <button
+          className={activeView === 'profile' ? 'active' : ''}
+          onClick={() => onChangeView?.('profile')}
+        >
+          <CircleUserRound size={17} /> Meu perfil
         </button>
       </nav>
       <button className="dashboard-exit" onClick={logout}>Sair da conta</button>
